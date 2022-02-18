@@ -25,23 +25,23 @@ EWM.train.data_WtrTemp
 
 EWM.train.data_ACCESS.WtrTemp=sdm.data[,-c(1,2,14,16:19)]
 EWM.train.data_ACCESS.WtrTemp
-write_csv(EWM.train.data_ACCESS.WtrTemp, "Data/TrainData/EWM.train.data_ACCESS.WtrTemp.csv")
+write_csv(EWM.train.data_ACCESS.WtrTemp, "processed_data/TrainData/EWM.train.data_ACCESS.WtrTemp.csv")
 
 EWM.train.data_MIROC5.WtrTemp=sdm.data[,-c(1,2,14,15,17:19)]
 EWM.train.data_MIROC5.WtrTemp
-write_csv(EWM.train.data_MIROC5.WtrTemp, "Data/TrainData/EWM.train.data_MIROC5.WtrTemp.csv")
+write_csv(EWM.train.data_MIROC5.WtrTemp, "processed_data/TrainData/EWM.train.data_MIROC5.WtrTemp.csv")
 
 EWM.train.data_IPSL.WtrTemp=sdm.data[,-c(1,2,14:16,18,19)]
 EWM.train.data_IPSL.WtrTemp
-write_csv(EWM.train.data_IPSL.WtrTemp, "Data/TrainData/EWM.train.data_IPSL.WtrTemp.csv")
+write_csv(EWM.train.data_IPSL.WtrTemp, "processed_data/TrainData/EWM.train.data_IPSL.WtrTemp.csv")
 
 EWM.train.data_GFDL.WtrTemp=sdm.data[,-c(1,2,14:17,19)]
 EWM.train.data_GFDL.WtrTemp
-write_csv(EWM.train.data_GFDL.WtrTemp, "Data/TrainData/EWM.train.data_GFDL.WtrTemp.csv")
+write_csv(EWM.train.data_GFDL.WtrTemp, "processed_data/TrainData/EWM.train.data_GFDL.WtrTemp.csv")
 
 EWM.train.data_MRI.WtrTemp=sdm.data[,-c(1,2,14:18)]
 EWM.train.data_MRI.WtrTemp
-write_csv(EWM.train.data_MRI.WtrTemp, "Data/TrainData/EWM.train.data_MRI.WtrTemp.csv")
+write_csv(EWM.train.data_MRI.WtrTemp, "processed_data/TrainData/EWM.train.data_MRI.WtrTemp.csv")
 
 ### Created a new folder 'TrainData' within folder 'Data' and  moved the above saved files there!
 
