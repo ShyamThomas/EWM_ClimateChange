@@ -1,16 +1,16 @@
 library(tidyverse)
 library(miceadds)
 
-RFmodels = list.files(path ="Data/TrainData/", pattern = "*Top3_.Rdata$")
+RFmodels = list.files(path ="processed_data/TrainData/", pattern = "*Top3_.Rdata$")
 RFmodels
 
-TestDataFiles = list.files(path ="Data/TestData/ForecastData", pattern = "*.csv$")
+TestDataFiles = list.files(path ="processed_data/TestData/ForecastData", pattern = "*.csv$")
 TestDataFiles
 
 new.data=list()
 
 for (TestData in TestDataFiles){
-  Test = read.csv(paste("Data/TestData/ForecastData/",TestData, sep=""))
+  Test = read.csv(paste("processed_data/TestData/ForecastData/",TestData, sep=""))
   Test.preds=Test[,c(5,11,12)]
   colnames(Test.preds)[3]=paste(str_sub(TestData, 19,-13),".avg.ann.gdd", sep="")
   new.data[[TestData]]=Test.preds
@@ -19,20 +19,20 @@ for (TestData in TestDataFiles){
 fut.predictions=list()
 
 for (i in 1:5){
-  load.Rdata(paste("Data/TrainData/",RFmodels[i], sep=""), "train.model")
+  load.Rdata(paste("processed_data/TrainData/",RFmodels[i], sep=""), "train.model")
   fut.predictions[[i]]=predict(train.model, newdata = new.data[[i]])
 }
 
 fut.predictions
 fut.preds.df=as.data.frame(do.call(cbind,fut.predictions))
 
-TrainDataFiles=list.files(path ="Data/TrainData", pattern = "*.csv$")
+TrainDataFiles=list.files(path ="processed_data/TrainData", pattern = "*.csv$")
 TrainDataFiles
 
 new.data=list()
 
 for (TrainData in TrainDataFiles){
-  Train = read.csv(paste("Data/TrainData/",TrainData, sep=""))
+  Train = read.csv(paste("processed_data/TrainData/",TrainData, sep=""))
   Train.preds=Train[,c(5,11,12)]
   new.data[[TrainData]]=Train.preds
 }
@@ -40,7 +40,7 @@ for (TrainData in TrainDataFiles){
 curr.predictions=list()
 
 for (i in 1:5){
-  load.Rdata(paste("Data/TrainData/",RFmodels[i], sep=""), "train.model")
+  load.Rdata(paste("processed_data/TrainData/",RFmodels[i], sep=""), "train.model")
   curr.predictions[[i]]=predict(train.model, newdata = new.data[[i]])
 }
 head(curr.predictions)
