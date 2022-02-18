@@ -3,14 +3,14 @@ library(tidyverse)
 library(reshape2)
 library(ggplot2)
 
-setwd("~/UMNpostdoc/ProjectEWM/WaterTempData")
+setwd("~/UMNpostdoc/ProjectEWM/RProjects/EWM_ClimateChange")
 
 ###1. Read all the different temperature projection datasets
-ACCESS.temp.metrics=read.csv("Data/ACCESS_thermal_metrics.tsv", sep="\t")
-MIROC5.temp.metrics=read.csv("Data/MIROC5_thermal_metrics.tsv", sep="\t")
-GFDL.temp.metrics=read.csv("Data/GFDL_thermal_metrics.tsv", sep="\t")
-IPSL.temp.metrics=read.csv("Data/IPSL_thermal_metrics.tsv", sep="\t")
-MRI.temp.metrics=read.csv("Data/MRI_thermal_metrics.tsv", sep="\t")
+ACCESS.temp.metrics=read.csv("raw_data/ACCESS_thermal_metrics.tsv", sep="\t")
+MIROC5.temp.metrics=read.csv("raw_data/MIROC5_thermal_metrics.tsv", sep="\t")
+GFDL.temp.metrics=read.csv("raw_data/GFDL_thermal_metrics.tsv", sep="\t")
+IPSL.temp.metrics=read.csv("raw_data/IPSL_thermal_metrics.tsv", sep="\t")
+MRI.temp.metrics=read.csv("raw_data/MRI_thermal_metrics.tsv", sep="\t")
 
 ACCESS.temp.GDD10c=ACCESS.temp.metrics[,c(1:2,15)]
 MIROC5.temp.GDD10c=MIROC5.temp.metrics[,c(1:2,15)]
@@ -24,26 +24,26 @@ head(GFDL.temp.GDD10c)
 head(IPSL.temp.GDD10c)
 head(MRI.temp.GDD10c)
 
-mn.nhd_ids=read_csv("Data/MN_nhd2dowlknum.csv")
+mn.nhd_ids=read_csv("raw_data/MN_nhd2dowlknum.csv")
 head(mn.nhd_ids)
 dim(mn.nhd_ids) 
 
 ACCESS.temp.GDD10c.DOWs=merge(ACCESS.temp.GDD10c,mn.nhd_ids, by="site_id")
-write_csv(ACCESS.temp.GDD10c.DOWs, "Data/ACCESS.temp.GDD10c.DOWs.csv")
+write_csv(ACCESS.temp.GDD10c.DOWs, "processed_data/ACCESS.temp.GDD10c.DOWs.csv")
 MIROC5.temp.GDD10c.DOWs=merge(MIROC5.temp.GDD10c,mn.nhd_ids, by="site_id")
-write_csv(MIROC5.temp.GDD10c.DOWs, "Data/MIROC5.temp.GDD10c.DOWs.csv")
+write_csv(MIROC5.temp.GDD10c.DOWs, "processed_data/MIROC5.temp.GDD10c.DOWs.csv")
 GFDL.temp.GDD10c.DOWs=merge(GFDL.temp.GDD10c,mn.nhd_ids, by="site_id")
-write_csv(GFDL.temp.GDD10c.DOWs, "Data/GFDL.temp.GDD10c.DOWs.csv")
+write_csv(GFDL.temp.GDD10c.DOWs, "processed_data/GFDL.temp.GDD10c.DOWs.csv")
 IPSL.temp.GDD10c.DOWs=merge(IPSL.temp.GDD10c,mn.nhd_ids, by="site_id")
-write_csv(IPSL.temp.GDD10c.DOWs, "Data/IPSL.temp.GDD10c.DOWs.csv")
+write_csv(IPSL.temp.GDD10c.DOWs, "processed_data/IPSL.temp.GDD10c.DOWs.csv")
 MRI.temp.GDD10c.DOWs=merge(MRI.temp.GDD10c,mn.nhd_ids, by="site_id")
-write_csv(MRI.temp.GDD10c.DOWs, "Data/MRI.temp.GDD10c.DOWs.csv")
+write_csv(MRI.temp.GDD10c.DOWs, "processed_data/MRI.temp.GDD10c.DOWs.csv")
 
 head(ACCESS.temp.GDD10c.DOWs)
 hist(ACCESS.temp.GDD10c.DOWs$year)
 
 ### the above final dataset has a lot of lake ids to work with; subset by  merging with EWM prsence/absence data
-EWMprsabs.data=read.csv("Data/EWM.infes_relfrq.selpreds.prsabs.csv")
+EWMprsabs.data=read.csv("processed_data/EWM.infes_relfrq.selpreds.prsabs.csv")
 head(EWMprsabs.data)
 head(ACCESS.temp.GDD10c.DOWs)
 
@@ -116,7 +116,7 @@ EWMprsabs.data_updated =merge(EWMprsabs.data_updated,MRI.GDD10c.curr, by="DOWLKN
 head(EWMprsabs.data_updated)
 
 ### Forgot to include lake connectivity data; road density & stream density
-LakeConn=read_csv("Data/LakeConn.data.csv")
+LakeConn=read_csv("raw_data/LakeConn.data.csv")
 LakeConn
 
 EWMprsabs.data_final=left_join(EWMprsabs.data_updated,LakeConn, by="DOWLKNUM")
@@ -124,7 +124,7 @@ EWMprsabs.data_final.nona=EWMprsabs.data_final%>%na.omit()
 dim(EWMprsabs.data_final.nona)
 head(EWMprsabs.data_final.nona)
 
-write_csv(EWMprsabs.data_final.nona, "Data/EWM.prsabs95to15_AllGCMs.csv")
+write_csv(EWMprsabs.data_final.nona, "processed_data/EWM.prsabs95to15_AllGCMs.csv")
 
 ### A quick plot of all the lake GDD measures from 5 different GCMs
 plot(EWMprsabs.data_updated$LAT, EWMprsabs.data_updated$mean.gdd_wtr_10c, col="gray", pch=16, xlab="Latitiude", ylab="Ann. GDD@10c")
