@@ -5,7 +5,8 @@ library(corrplot)
 
 setwd("~/UMNpostdoc/ProjectEWM/RProjects/EWM_ClimateChange")
 
-EWM.GCMs.data=read_csv("raw_data/EWM.prsabs95to15_AllGCMs.csv")
+EWM.GCMs.data=read_csv("processed_data/EWM.prsabs95to15_AllGCMs.csv")
+EWM.GCMs.data
 EWM.GCMs.data%>%View()
 sdm.data=EWM.GCMs.data[,-c(1:3,6)]%>%
   na.omit()
