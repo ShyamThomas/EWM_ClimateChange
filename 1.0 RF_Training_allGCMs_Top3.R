@@ -78,9 +78,9 @@ ggsave(filename=paste(sub('....$','',Train.fileName),"_ImpPlot.png", sep=""), Im
 results_top3=NULL
 
 for(Train.fileName in Train.fileNames) {
-  sample = read.csv(paste("Data/TrainData/",Train.fileName, sep=""))
+  sample = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
   rf = randomForest(sample[,c(5,11,12)], sample$EWMSTATUS_corrRelFrq,importance=TRUE, ntree=5000, type="regression")
-  save(rf, file=paste("Data/TrainData/", sub('....$','',Train.fileName), "Top3_.Rdata", sep=""))
+  save(rf, file=paste("processed_data/TrainData/", sub('....$','',Train.fileName), "Top3_.Rdata", sep=""))
   
   meanMSE = mean(rf$mse)
   results_top3 = rbind(results_top3, data.frame(Train.fileName, meanMSE))
