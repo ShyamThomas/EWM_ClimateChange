@@ -5,7 +5,7 @@ library(miceadds)
 #################################### PLOT 1: CHANGE IN RISK ARROW PLOTS AS A FUNCTION OF WATER TEMP ######################################
 
 ##From 1.0 get the data needed: 
-#### EWM.GCMs.data=read_csv("processed_data/EWM.prsabs95to15_AllGCMs.csv")
+EWM.GCMs.data=read_csv("processed_data/EWM.prsabs95to15_AllGCMs.csv")
 
 setdiff(EWM.GCMs.data$DOWLKNUM,Test$DOWLKNUM) ## Ensure training data DOWs and test data DOWs match perfectly
 curr.preds.df$DOWLKNUM=EWM.GCMs.data$DOWLKNUM

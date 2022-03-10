@@ -32,8 +32,9 @@ for (i in 1:5){
 head(fut.predictions)
 fut.preds.df=as.data.frame(do.call(cbind,fut.predictions))
 head(fut.preds.df)
+write_csv(fut.preds.df, "Results/Futr.Predictions.csv")
 
-
+############################################################################################################################################
 #### Repeat the above codes with Current temperature(i.e. the training data)
 TrainDataFiles=list.files(path ="processed_data/TrainData", pattern = "*.csv$")
 TrainDataFiles
@@ -55,7 +56,9 @@ for (i in 1:5){
 head(curr.predictions)
 curr.preds.df=as.data.frame(do.call(cbind,curr.predictions))
 head(curr.preds.df)
+write_csv(curr.preds.df, "Results/Curr.Predictions.csv")
 
+############################################################################################################################################
 ModelNames=c("ACCESS","GFDL","IPSL","MIROC5","MRI")
 ModelNames
 colnames(fut.preds.df)=ModelNames
