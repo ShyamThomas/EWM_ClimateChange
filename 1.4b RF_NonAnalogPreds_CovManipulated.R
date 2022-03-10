@@ -164,7 +164,17 @@ NegRisk_CombinedDomains=bind_rows(NegRisk_a, NegRisk_na)
 
 NegRisk_CombinedDomains2=NegRisk_CombinedDomains%>%rowwise()%>%mutate(Mean.NegRisk=mean(c_across(1:5)))
 NegRisk_CombinedDomains2
-ggplot(NegRisk_CombinedDomains2,aes(RoadPercentile,Mean.NegRisk,col=Domain))+geom_point()+geom_smooth(method="loess")+ylab("Proportion of lakes with DECREASED risk")
+ggplot(NegRisk_CombinedDomains2,aes(RoadPercentile,Mean.NegRisk,col=Domain))+geom_point()+geom_smooth(method="loess")+
+  ylab("Proportion of lakes \n with DECREASED risk")+xlab("Road density levels")
+ggsave("NegRisk_Plot_RoadEffect.png", path="./Figures", device = "png",width = 6, height = 4.5 )
+
+NegRisk_CombinedDomains2$RoadDensity=rep(Roads.quants,2)
+NegRisk_CombinedDomains3=NegRisk_CombinedDomains2%>%filter(RoadDensity<100)
+NegRisk_CombinedDomains3
+ggplot(NegRisk_CombinedDomains3,aes(RoadDensity,Mean.NegRisk,col=Domain))+geom_point()+geom_smooth(method="loess")+
+ylab("Proportion of lakes \n with DECREASED risk")+xlab("Road density")
+ggsave("NegRisk_Plot_RoadEffect_DensityVals.png", path="./Figures", device = "png",width = 6, height = 4.5 )
+
 
 
 
