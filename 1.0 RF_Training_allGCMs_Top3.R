@@ -48,7 +48,7 @@ write_csv(EWM.train.data_MRI.WtrTemp, "processed_data/TrainData/EWM.train.data_M
 
 ################### ITERATING RF MODELS ACROSS ALL THE TRAIN DATSETS
 ### Start by creating a list of all the saved files in the new folder
-Train.fileNames = list.files(path="Data/TrainData/",pattern=".csv")
+Train.fileNames = list.files(path="processed/TrainData/",pattern=".csv")
 Train.fileNames
 
 ### A simple loop that reads all the files and executes random forest algorithm; saves RF obj and OOB errors as text file
@@ -57,7 +57,7 @@ Train.fileNames
 results=NULL
 
 for(Train.fileName in Train.fileNames) {
-sample = read.csv(paste("Data/TrainData/",Train.fileName, sep=""))
+sample = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
 rf = randomForest(sample[,c(3:5,7:12)], sample$EWM,importance=TRUE, ntree=5000, type="regression")
 #save(rf, file=paste("Data/TrainData/", sub('....$','',Train.fileName), ".Rdata", sep=""))
 
