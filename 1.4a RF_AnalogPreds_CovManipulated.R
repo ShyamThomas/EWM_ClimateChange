@@ -1,5 +1,7 @@
 library(tidyverse)
 library(ggplot2)
+library(miceadds)
+library(randomForest)
 
 ########################### FUTURE PREDICTIONS with MANIPULATION of TOP RANKED COVARIATE - ROAD DENSITY ####################################
 ######################################## FOR ANALOG TEMPERATURE CONDITIONS #################################################################
@@ -7,12 +9,13 @@ library(ggplot2)
 EWM.train.data_ACCESS.WtrTemp=read_csv("processed_data/TrainData/EWM.train.data_ACCESS.WtrTemp.csv")
 EWM.train.data_ACCESS.WtrTemp
 max(EWM.train.data_ACCESS.WtrTemp$ACCESS.avg.ann.gdd) ## the threshold gdd is 2367
-head(curr.preds.df)
+curr.preds.df=read_csv("Results/Curr.Predictions.csv")
+curr.preds.df
 
 
 ACCESS.forecast=read_csv("processed_data/TestData/ForecastData/EWM.forecast.data_ACCESS.WtrTemp.csv")
 ACCESS.forecast.DOWs=ACCESS.forecast%>%filter(avg.ann.gdd<2367)%>%select(DOWLKNUM) ### get the analog DOWs
-curr.preds.df.analog=merge(curr.preds.df, ACCESS.forecast.DOWs)
+curr.preds.df.analog=merge(curr.preds.df, ACCESS.forecast.DOWs, by="DOWLKNUM")
 head(curr.preds.df.analog) ### predictions for analog domain based on ACCESS gdd
 
 Roads.quants=quantile(ACCESS.forecast$roaddensity_density_mperha,probs=seq(0,1, 0.1))
@@ -163,12 +166,13 @@ ggplot(NegRisk.df,aes(RoadPercentile,ACCESS.negrisk))+geom_point()+geom_smooth(m
 EWM.train.data_ACCESS.WtrTemp=read_csv("processed_data/TrainData/EWM.train.data_ACCESS.WtrTemp.csv")
 EWM.train.data_ACCESS.WtrTemp
 max(EWM.train.data_ACCESS.WtrTemp$ACCESS.avg.ann.gdd) ## the threshold gdd is 2367
+curr.preds.df=read_csv("Results/Curr.Predictions.csv")
 head(curr.preds.df)
 
 
 ACCESS.forecast=read_csv("processed_data/TestData/ForecastData/EWM.forecast.data_ACCESS.WtrTemp.csv")
 ACCESS.forecast.DOWs=ACCESS.forecast%>%filter(avg.ann.gdd<2367)%>%select(DOWLKNUM) ### get the analog DOWs
-curr.preds.df.analog=merge(curr.preds.df, ACCESS.forecast.DOWs)
+curr.preds.df.analog=merge(curr.preds.df, ACCESS.forecast.DOWs, by="DOWLKNUM")
 head(curr.preds.df.analog) ### predictions for analog domain based on ACCESS gdd
 
 Secchi.quants=quantile(ACCESS.forecast$avg_secchi,probs=seq(0,1, 0.1))
@@ -200,7 +204,7 @@ max(EWM.train.data_MRI.WtrTemp$MRI.avg.ann.gdd)##2421
 MRI.forecast=read_csv("processed_data/TestData/ForecastData/EWM.forecast.data_MRI.WtrTemp.csv")
 MRI.forecast
 MRI.forecast.DOWs=MRI.forecast%>%filter(avg.ann.gdd<2421)%>%select(DOWLKNUM)
-curr.preds.df.analog=merge(curr.preds.df, MRI.forecast.DOWs)
+curr.preds.df.analog=merge(curr.preds.df, MRI.forecast.DOWs, by="DOWLKNUM")
 head(curr.preds.df.analog)
 
 MRI.forecast_2preds_varSecchi_Analog=MRI.forecast%>%select(roaddensity_density_mperha, avg.ann.gdd)%>%filter(avg.ann.gdd<2421)
@@ -226,7 +230,7 @@ max(EWM.train.data_GFDL.WtrTemp$GFDL.avg.ann.gdd)##2449
 
 GFDL.forecast=read_csv("processed_data/TestData/ForecastData/EWM.forecast.data_GFDL.WtrTemp.csv")
 GFDL.forecast.DOWs=GFDL.forecast%>%filter(avg.ann.gdd<2449)%>%select(DOWLKNUM)
-curr.preds.df.analog=merge(curr.preds.df, GFDL.forecast.DOWs)
+curr.preds.df.analog=merge(curr.preds.df, GFDL.forecast.DOWs, by="DOWLKNUM")
 head(curr.preds.df.analog)
 
 
@@ -254,7 +258,7 @@ max(EWM.train.data_MIROC5.WtrTemp$MIROC5.avg.ann.gdd)
 MIROC5.forecast=read_csv("processed_data/TestData/ForecastData/EWM.forecast.data_MIROC5.WtrTemp.csv")
 MIROC5.forecast
 MIROC5.forecast.DOWs=MIROC5.forecast%>%filter(avg.ann.gdd<2516)%>%select(DOWLKNUM)
-curr.preds.df.analog=merge(curr.preds.df, MIROC5.forecast.DOWs)
+curr.preds.df.analog=merge(curr.preds.df, MIROC5.forecast.DOWs, by="DOWLKNUM")
 head(curr.preds.df.analog)
 
 MIROC5.forecast_2preds_varSecchi.Analog=MIROC5.forecast%>%select(roaddensity_density_mperha, avg.ann.gdd)%>%filter(avg.ann.gdd<2516)
@@ -280,7 +284,7 @@ max(EWM.train.data_IPSL.WtrTemp$IPSL.avg.ann.gdd)
 
 IPSL.forecast=read_csv("processed_data/TestData/ForecastData/EWM.forecast.data_IPSL.WtrTemp.csv")
 IPSL.forecast.DOWs=IPSL.forecast%>%filter(avg.ann.gdd<2559)%>%select(DOWLKNUM)
-curr.preds.df.analog=merge(curr.preds.df, IPSL.forecast.DOWs)
+curr.preds.df.analog=merge(curr.preds.df, IPSL.forecast.DOWs, by="DOWLKNUM")
 head(curr.preds.df.analog)
 
 IPSL.forecast_2preds_varSecchi.Analog=IPSL.forecast%>%select(roaddensity_density_mperha, avg.ann.gdd)%>%filter(avg.ann.gdd<2559)
@@ -296,15 +300,16 @@ IPSL.negrisk=list()
 for (i in 1:length(IPSL.preds_lst_varSecchiLevels)){
   IPSL.pred.results[[i]]= predict(IPSL.m, newdata = IPSL.preds_lst_varSecchiLevels[[i]])
   IPSL.change[[i]]=IPSL.pred.results[[i]]-curr.preds.df.analog$IPSL
-  IPSL.negrisk[[i]]=length(which(IPSL.change[[i]]<0))
+  IPSL.negrisk[[i]]=length(which(IPSL.change[[i]]<0))/432
 }
 
 All.Negrisk_Secchi=lapply(list(ACCESS.negrisk, MRI.negrisk,GFDL.negrisk, IPSL.negrisk,MIROC5.negrisk), unlist)
-NegRisk.df_Analog_Secchi=as.data.frame(All.Negrisk_Secchi, col.names = c("ACCESS.negrisk", "MRI.negrisk","GFDL.negrisk", "IPSL.negrisk","MIROC5.negrisk"))
+NegRisk.df_Analog_Secchi=as.data.frame(All.Negrisk_Secchi, col.names = c("ACCESS.negrisk", "MRI.negrisk","GFDL.negrisk",
+                                                                         "IPSL.negrisk","MIROC5.negrisk"))
 NegRisk.df_Analog_Secchi
 Secchi.level=seq(0,1,0.1)
 NegRisk.df_Analog_Secchi$SecchiPercentile=Secchi.level
-write_csv(NegRisk.df_Analog, "Results/NegRisk_Analog.csv")
+write_csv(NegRisk.df_Analog_Secchi, "Results/Secchi_NegRisk_Analog.csv")
 
 ggplot(NegRisk.df_Analog_Secchi,aes(SecchiPercentile,ACCESS.negrisk))+geom_point()+geom_smooth(method = "lm")
 ggplot(NegRisk.df_Analog_Secchi,aes(SecchiPercentile,ACCESS.negrisk))+geom_point()+geom_smooth(method = "gam")
