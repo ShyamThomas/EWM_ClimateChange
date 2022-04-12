@@ -36,7 +36,7 @@ fut.preds.df=as.data.frame(do.call(cbind,fut.predictions))
 head(fut.preds.df)
 tail(fut.preds.df)
 
-############################################################################################################################################
+#################################################################################################
 #### Repeat the above codes with Current temperature(i.e. the training data)
 TrainDataFiles=list.files(path ="processed_data/TrainData", pattern = "*.csv$")
 TrainDataFiles
@@ -60,13 +60,18 @@ curr.preds.df=as.data.frame(do.call(cbind,curr.predictions))
 head(curr.preds.df)
 tail(curr.preds.df)
 
-############################################################################################################################################
+##########################################################################################
 ModelNames=c("ACCESS","GFDL","IPSL","MIROC5","MRI")
 ModelNames
 colnames(fut.preds.df)=ModelNames
 colnames(fut.preds.df)
 colnames(curr.preds.df)=ModelNames
 colnames(curr.preds.df)
+
+fut.preds.df$DOWLKNUM=Test$DOWLKNUM
+curr.preds.df$DOWLKNUM=EWM.GCMs.data$DOWLKNUM
+write_csv(fut.preds.df, "Results/GAM.k3_Fut.Predictions.csv")
+write_csv(curr.preds.df, "Results/GAM.k3_Curr.Predictions.csv")
 
 curr.preds.df$Period=rep("Current",468)
 fut.preds.df$Period=rep("Future",467)
@@ -134,7 +139,7 @@ curr.preds.df=as.data.frame(do.call(cbind,curr.predictions))
 head(curr.preds.df)
 tail(curr.preds.df)
 
-############################################################################################################################################
+#############################################################################################
 ModelNames=c("ACCESS","GFDL","IPSL","MIROC5","MRI")
 ModelNames
 colnames(fut.preds.df)=ModelNames
