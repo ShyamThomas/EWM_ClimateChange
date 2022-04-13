@@ -147,6 +147,11 @@ colnames(fut.preds.df)
 colnames(curr.preds.df)=ModelNames
 colnames(curr.preds.df)
 
+fut.preds.df$DOWLKNUM=Test$DOWLKNUM
+curr.preds.df$DOWLKNUM=EWM.GCMs.data$DOWLKNUM
+write_csv(fut.preds.df, "Results/GAM.k10_Fut.Predictions.csv")
+write_csv(curr.preds.df, "Results/GAM.k10_Curr.Predictions.csv")
+
 curr.preds.df$Period=rep("Current",468)
 fut.preds.df$Period=rep("Future",467)
 currANDfut_preds_k10=bind_rows(curr.preds.df,fut.preds.df)
