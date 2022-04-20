@@ -48,7 +48,7 @@ write_csv(EWM.train.data_MRI.WtrTemp, "processed_data/TrainData/EWM.train.data_M
 
 ################### ITERATING RF MODELS ACROSS ALL THE TRAIN DATSETS
 ### Start by creating a list of all the saved files in the new folder
-Train.fileNames = list.files(path="processed/TrainData/",pattern=".csv")
+Train.fileNames = list.files(path="processed_data/TrainData/",pattern=".csv")
 Train.fileNames
 
 ### A simple loop that reads all the files and executes random forest algorithm; saves RF obj and OOB errors as text file
@@ -84,21 +84,23 @@ for(Train.fileName in Train.fileNames) {
   
   meanMSE = mean(rf$mse)
   results_top3 = rbind(results_top3, data.frame(Train.fileName, meanMSE))
-  write.table(results,"Results/RF_MSE_Top3.txt",sep = "\t")
+  write.table(results_top3,"Results/RF_MSE_Top3.txt",sep = "\t")
   
-  Top3Preds.Names=colnames(sample)[c(5,11,12)]
+  #Top3Preds.Names=colnames(sample)[c(5,11,12)]
   
-  for (Pred.Name in Top3Preds.Names){
-    partial_plot=autoplot(partial(rf,pred.var = Pred.Name, ice=TRUE, rug=TRUE, train = sample, prob = TRUE),xlab=Pred.Name, ylab="Invasion risk", alpha=0.1)
-    ggsave(filename=paste(sub('....$','',Train.fileName),"_",Pred.Name,"_IcePlot.png", sep=""), partial_plot, path="Figures/",units="in", width=9, height=6, dpi=900)
-    }
+  #for (Pred.Name in Top3Preds.Names){
+    #partial_plot=autoplot(partial(rf,pred.var = Pred.Name, ice=TRUE, rug=TRUE, train = sample, prob = TRUE),xlab=Pred.Name, ylab="Invasion risk", alpha=0.1)
+    #ggsave(filename=paste(sub('....$','',Train.fileName),"_",Pred.Name,"_IcePlot.png", sep=""), partial_plot, path="Figures/",units="in", width=9, height=6, dpi=900)
+    #}
 }
 
 ##### Run 5-fold cross-validation and capture AUCs for each of the RF model
+library(pROC)
+
 AUC_all=NULL
 
 for(Train.fileName in Train.fileNames) {
-  full.df = read.csv(paste("Data/TrainData/",Train.fileName, sep=""))
+  full.df = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
   folds = rep_len(1:5,nrow(full.df))
   sample.folds=sample(folds,nrow(sample))
   full.df$folds=sample.folds
@@ -122,4 +124,12 @@ AUC_all
 AUC_all$Train.fileName=sub('.WtrTemp.csv', '',AUC_all$Train.fileName)
 AUC_all
 
-write.table(AUC_all,"Results/AllGCMs_5foldCV_AUCs.txt", sep="\t")
+#write.table(AUC_all,"Results/AllGCMs_5foldCV_AUCs.txt", sep="\t")
+
+MeanAUC_GCMs=AUC_all%>%group_by(Train.fileName)%>%summarise(
+ meanAUC=mean(AUC)
+ )
+
+write.table(MeanAUC_GCMs,"Results/AllGCMs_5foldCV_AUCs.txt", sep="\t")
+
+
