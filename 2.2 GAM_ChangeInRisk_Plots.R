@@ -96,7 +96,7 @@ ggplot()+
   
   GAM.k10_CurrFut_Temp_InvRisk=left_join(Curr.Futr_MeanTemp, Curr.Futr_MeanRisk, by="DOWLKNUM")
   GAM.k10_CurrFut_Temp_InvRisk
-  GAM.k10_CurrFut_Temp_InvRisk_new=GAM.k3_CurrFut_Temp_InvRisk%>%mutate(MeanTmpChange=Futr.MeanTmp-Curr.MeanTmp, 
+  GAM.k10_CurrFut_Temp_InvRisk_new=GAM.k10_CurrFut_Temp_InvRisk%>%mutate(MeanTmpChange=Futr.MeanTmp-Curr.MeanTmp, 
                                                                        MeanRiskChange=Futr.MeanRisk-Curr.MeanRisk)
   GAM.k10_CurrFut_Temp_InvRisk_new
   

@@ -86,12 +86,12 @@ for(Train.fileName in Train.fileNames) {
   results_top3 = rbind(results_top3, data.frame(Train.fileName, meanMSE))
   write.table(results_top3,"Results/RF_MSE_Top3.txt",sep = "\t")
   
-  #Top3Preds.Names=colnames(sample)[c(5,11,12)]
+  Top3Preds.Names=colnames(sample)[c(5,11,12)]
   
-  #for (Pred.Name in Top3Preds.Names){
-    #partial_plot=autoplot(partial(rf,pred.var = Pred.Name, ice=TRUE, rug=TRUE, train = sample, prob = TRUE),xlab=Pred.Name, ylab="Invasion risk", alpha=0.1)
-    #ggsave(filename=paste(sub('....$','',Train.fileName),"_",Pred.Name,"_IcePlot.png", sep=""), partial_plot, path="Figures/",units="in", width=9, height=6, dpi=900)
-    #}
+  for (Pred.Name in Top3Preds.Names){
+    partial_plot=autoplot(partial(rf,pred.var = Pred.Name, ice=TRUE, rug=TRUE, train = sample, prob = TRUE),xlab=Pred.Name, ylab="Invasion risk", alpha=0.1)
+    ggsave(filename=paste(sub('....$','',Train.fileName),"_",Pred.Name,"_IcePlot.png", sep=""), partial_plot, path="Figures/",units="in", width=9, height=6, dpi=900)
+    }
 }
 
 ##### Run 5-fold cross-validation and capture AUCs for each of the RF model
@@ -126,10 +126,10 @@ AUC_all
 
 #write.table(AUC_all,"Results/AllGCMs_5foldCV_AUCs.txt", sep="\t")
 
-MeanAUC_GCMs=AUC_all%>%group_by(Train.fileName)%>%summarise(
+MeanAUC_GCMs_RF=AUC_all%>%group_by(Train.fileName)%>%summarise(
  meanAUC=mean(AUC)
  )
 
-write.table(MeanAUC_GCMs,"Results/AllGCMs_5foldCV_AUCs.txt", sep="\t")
+write.table(MeanAUC_GCMs_RF,"Results/AllGCMs_5foldCV_RF_AUCs.txt", sep="\t")
 
 

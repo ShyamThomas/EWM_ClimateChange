@@ -70,6 +70,7 @@ load.Rdata("processed_data/TrainData/EWM.train.data_GFDL.WtrTempGAM.Rdata", "GFD
 load.Rdata("processed_data/TrainData/EWM.train.data_IPSL.WtrTempGAM.Rdata", "IPSL.GAM.model")
 load.Rdata("processed_data/TrainData/EWM.train.data_MIROC5.WtrTempGAM.Rdata", "MIROC5.GAM.model")
 load.Rdata("processed_data/TrainData/EWM.train.data_MRI.WtrTempGAM.Rdata", "MRI.GAM.model")
+
 ## setting k =3
 for(Train.fileName in Train.fileNames) {
     sample = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
@@ -120,24 +121,26 @@ draw(MRI.GAM_k3.model, select=3),draw(MRI.GAM_k6.model, select=3),draw(MRI.GAM.m
 nrow=5)
 
 ############################################################################################################################################
-##### Run 5-fold cross-validation and capture AUCs for each of the RF model
+##### Run 5-fold cross-validation and capture AUCs for each of the GAM models
 AUC_all=NULL
 
 for(Train.fileName in Train.fileNames) {
-  full.df = read.csv(paste("Data/TrainData/",Train.fileName, sep=""))
-  folds = rep_len(1:5,nrow(full.df))
+  full.df = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
+  sub.df=full.df[,c(1,5,11,12)]
+  folds = rep_len(1:5,nrow(sub.df))
   sample.folds=sample(folds,nrow(sample))
-  full.df$folds=sample.folds
+  sub.df$folds=sample.folds
   
   set.seed(007)
   
-  for(i in 1:5){test.data=full.df[full.df$folds==i,]
-  train.data= full.df[full.df$folds !=i,]
-  train.rf = randomForest(train.data[,c(5,11,12)], train.data$EWMSTATUS_corrRelFrq,importance=TRUE, ntree=5000, 
-                          type="regression")
-  preds.test=predict(train.rf, newdata=test.data)
-  AUC=auc(roc(test.data$EWMSTATUS_corrRelFrq,preds.test))
+  for(i in 1:5){test.data=sub.df[sub.df$folds==i,]
+      train.data= sub.df[sub.df$folds !=i,]
+      fm <- paste('s(', names(sub.df[ -c(1,5) ]), ',k=3)', sep = "", collapse = ' + ')   ### FOR k=3 GAMs & then k=10
+      fm <- as.formula(paste('EWMSTATUS_corrRelFrq ~', fm))
+      gam_k3 = gam(fm,data=train.data, method="REML", family = "binomial")
+      preds.test=predict(gam_k3, newdata=test.data, type="response")
   
+  AUC=auc(roc(test.data$EWMSTATUS_corrRelFrq,preds.test))
   AUC_all = rbind(AUC_all, data.frame(Train.fileName, i, AUC))
   }
 }
@@ -148,4 +151,46 @@ AUC_all
 AUC_all$Train.fileName=sub('.WtrTemp.csv', '',AUC_all$Train.fileName)
 AUC_all
 
-write.table(AUC_all,"Results/AllGCMs_5foldCV_AUCs.txt", sep="\t")
+MeanAUC_GCMs_k3=AUC_all%>%group_by(Train.fileName)%>%summarise(
+meanAUC=mean(AUC)
+)
+MeanAUC_GCMs_k3
+
+write.table(MeanAUC_GCMs_k3,"Results/AllGCMs_5foldCV_GAMk3_AUCs.txt", sep="\t")
+
+########## now for GAM, k=10
+AUC_all=NULL
+
+for(Train.fileName in Train.fileNames) {
+  full.df = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
+  sub.df=full.df[,c(1,5,11,12)]
+  folds = rep_len(1:5,nrow(sub.df))
+  sample.folds=sample(folds,nrow(sample))
+  sub.df$folds=sample.folds
+  
+  set.seed(007)
+  
+  for(i in 1:5){test.data=sub.df[sub.df$folds==i,]
+  train.data= sub.df[sub.df$folds !=i,]
+  fm <- paste('s(', names(sub.df[ -c(1,5) ]), ',k=10)', sep = "", collapse = ' + ')   ### FOR GAMs k=10
+  fm <- as.formula(paste('EWMSTATUS_corrRelFrq ~', fm))
+  gam_k10 = gam(fm,data=train.data, method="REML", family = "binomial")
+  preds.test=predict(gam_k10, newdata=test.data, type="response")
+  
+  AUC=auc(roc(test.data$EWMSTATUS_corrRelFrq,preds.test))
+  AUC_all = rbind(AUC_all, data.frame(Train.fileName, i, AUC))
+  }
+}
+
+### Get rid off all the unwanted letters
+AUC_all$Train.fileName=sub('EWM.train.data_', '',AUC_all$Train.fileName)
+AUC_all
+AUC_all$Train.fileName=sub('.WtrTemp.csv', '',AUC_all$Train.fileName)
+AUC_all
+
+MeanAUC_GCMs_k10=AUC_all%>%group_by(Train.fileName)%>%summarise(
+  meanAUC=mean(AUC)
+)
+MeanAUC_GCMs_k10
+write.table(MeanAUC_GCMs_k10,"Results/AllGCMs_5foldCV_GAMk10_AUCs.txt", sep="\t")
+

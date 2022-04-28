@@ -44,6 +44,7 @@ NegRisk_Combined_Secchi
 
 ggplot(NegRisk_Combined_Secchi,aes(SecchiPercentile,Mean.NegRisk,col=Domain))+geom_point()+geom_smooth(method="loess")+
   ylab("Proportion of lakes \n with DECREASED risk")+xlab("Secchi % levels")
+ggsave("NegRisk_Plot_SecchiEffect_DensityVals.png", path="./Figures", device = "png",width = 6, height = 4.5 )
 
 SecchiEffect=ggplot(NegRisk_Combined_Secchi,aes(SecchiPercentile,1-Mean.NegRisk,col=Domain))+geom_point()+geom_smooth(method="loess")+
 ylab("Proportion of lakes \n with predicted INCREASE in invasion risk")+xlab("Secchi depth")+ylim(0.0,0.8)
