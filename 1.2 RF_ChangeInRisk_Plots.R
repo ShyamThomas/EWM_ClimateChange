@@ -19,6 +19,7 @@ Curr.Futr_MeanRisk
 ### Read the temperature data and repeat the above steps
 Curr.Temps=EWM.GCMs.data[,c(1,19:23)]%>%filter(DOWLKNUM!=47004901)
 Curr.Temps
+
 ### Put together all the forecasted future temperatures
 ACCESS.forecast=read_csv("processed_data/TestData/ForecastData/EWM.forecast.data_ACCESS.WtrTemp.csv")
 GFDL.forecast=read_csv("processed_data/TestData/ForecastData/EWM.forecast.data_GFDL.WtrTemp.csv")
@@ -77,5 +78,21 @@ p.lat=ggplot(RF_CurrFut_Temp_InvRisk_KeyCov, mapping=aes(x=Curr.MeanTmp+MeanTmpC
                               scale_color_gradient2(high="#0072B2", low ="#D55E00")+labs(colour = "Change\n in risk") + 
                            xlab("Annual growing degree days") + ylab("Latitude")+geom_vline(xintercept = 2205, lty=2)
 
+####################### CALCULATE SPECIES RANGE CHANGE ESTIMATES
+#### FOR ENTIRE RANGE
+RF_CurrFut_Temp_InvRisk_new
+LakesAdded_RF=RF_CurrFut_Temp_InvRisk_new%>%filter(Curr.MeanRisk<0.5)%>%filter(Futr.MeanRisk>0.5)%>%nrow()
+LakesLost_RF=RF_CurrFut_Temp_InvRisk_new%>%filter(Curr.MeanRisk>0.5)%>%filter(Futr.MeanRisk<0.5)%>%nrow()
+SRC_RF=(LakesAdded_RF-LakesLost_RF)/184
+SRC_RF
+#### BY ANALOG AND NON-ANALOG DOMAINS
+LakesAdded_RF_A=RF_CurrFut_Temp_InvRisk_new%>% filter(Futr.MeanTmp<2200)%>%filter(Curr.MeanRisk<0.5)%>%filter(Futr.MeanRisk>0.5)%>%nrow()
+LakesLost_RF_A=RF_CurrFut_Temp_InvRisk_new%>%filter(Futr.MeanTmp<2200)%>%filter(Curr.MeanRisk>0.5)%>%filter(Futr.MeanRisk<0.5)%>%nrow()
+SRC_RF_A=(LakesAdded_RF_A- LakesLost_RF_A)/184
+SRC_RF_A
+LakesAdded_RF_NA=RF_CurrFut_Temp_InvRisk_new%>% filter(Futr.MeanTmp>2200)%>%filter(Curr.MeanRisk<0.5)%>%filter(Futr.MeanRisk>0.5)%>%nrow()
+LakesLost_RF_NA=RF_CurrFut_Temp_InvRisk_new%>%filter(Futr.MeanTmp>2200)%>%filter(Curr.MeanRisk>0.5)%>%filter(Futr.MeanRisk<0.5)%>%nrow()
+SRC_RF_NA=(LakesAdded_RF_NA- LakesLost_RF_NA)/184
+SRC_RF_NA
 
 

@@ -1,0 +1,16 @@
+﻿SDM algorithm,GCM,Random CV,Spatial CV,Ind. CV
+Simple,ACCESS,0.84,0.77,0.64
+Simple,GFDL,0.83,0.76,0.67
+Simple,IPSL,0.83,0.77,0.66
+Simple,MIROC5,0.84,0.77,0.65
+Simple,MRI,0.84,0.77,0.66
+Intermediate,ACCESS,0.83,0.78,0.68
+Intermediate,GFDL,0.83,0.77,0.7
+Intermediate,IPSL,0.83,0.78,0.7
+Intermediate,MIROC5,0.84,0.78,0.68
+Intermediate,MRI,0.84,0.78,0.71
+Complex,ACCESS,0.83,0.74,0.63
+Complex,GFDL,0.82,0.74,0.64
+Complex,IPSL,0.8,0.72,0.65
+Complex,MIROC5,0.82,0.74,0.64
+Complex,MRI,0.83,0.73,0.66

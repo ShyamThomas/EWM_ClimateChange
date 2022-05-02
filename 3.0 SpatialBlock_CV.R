@@ -100,47 +100,186 @@ p=ggplot()+geom_sf(data = Minn.sf, fill=NA, colour="gray", lwd=1)+geom_sf(data =
 p+theme_minimal()+theme(legend.title=element_blank())+ggtitle("EWM distribution")
 
 ############## SPATIALLY BLOCKED CROSS VALIDATION USING ACCESS DATA
-EWM.GCMs.data
-sdm.data=EWM.GCMs.data[,-c(1:3,6)]%>%
-na.omit()
-sdm.data
-EWM.train.data_ACCESS.WtrTemp=sdm.data[,-c(1,2,14,16:19)]
-EWM.train.data_ACCESS.WtrTemp
-EWM.train.data_ACCESS.WtrTemp.Reduced=EWM.train.data_ACCESS.WtrTemp[,c(1,5,11,12)]
+############## START WITH RANDOM FOREST MODELS
+Train.fileNames = list.files(path="processed_data/TrainData/",pattern=".csv")
+Train.fileNames
 
-EWM.train.data_ACCESS.WtrTemp$RFpreds=NA
 
+AUC_all=NULL
+
+for(Train.fileName in Train.fileNames) {
+  full.df = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
+  sub.df=full.df[,c(1,5,11,12)]
 
 folds=CheqBrd.trial.blocks$folds
-
-for(k in seq_len(length(folds))){
-  # extracting the training and testing indices
-  # this way works with folds list (but not foldID)
-  trainSet <- unlist(folds[[k]][1]) # training set indices
-  testSet <- unlist(folds[[k]][2]) # testing set indices
-  rf <- randomForest(as.factor(EWMSTATUS_corrRelFrq)~., EWM.train.data_ACCESS.WtrTemp.Reduced[trainSet, ], ntree = 500) # model fitting on training set
-  EWM.train.data_ACCESS.WtrTemp$RFpreds[testSet] <- predict(rf, EWM.train.data_ACCESS.WtrTemp.Reduced[testSet, ], type = "prob")[,2] # predict the test set
+  
+  for(k in seq_len(length(folds))){
+    # extracting the training and testing indices
+    # this way works with folds list (but not foldID)
+    trainSet <- unlist(folds[[k]][1]) # training set indices
+    testSet <- unlist(folds[[k]][2]) # testing set indices
+    rf <- randomForest(as.factor(EWMSTATUS_corrRelFrq)~., sub.df[trainSet, ], ntree = 500) # model fitting on training set
+    full.df$RFpreds[testSet] <- predict(rf, sub.df[testSet, ], type = "prob")[,2] # predict the test set
+  
+      AUC=auc(roc(full.df$EWMSTATUS_corrRelFrq,full.df$RFpreds))
+      AUC_all = rbind(AUC_all, data.frame(Train.fileName, k, AUC))
+  }
 }
 
-precrec_obj = evalmod(scores = EWM.train.data_ACCESS.WtrTemp$RFpreds, labels = EWM.train.data_ACCESS.WtrTemp$EWMSTATUS_corrRelFrq)
-precrec_obj
+AUC_all$Train.fileName=sub('EWM.train.data_', '',AUC_all$Train.fileName)
+AUC_all
+AUC_all$Train.fileName=sub('.WtrTemp.csv', '',AUC_all$Train.fileName)
+AUC_all
 
-##############
-EWM.train.data_ACCESS.WtrTemp$GAMpreds=NA
+MeanAUC_GCMs_RF=AUC_all%>%group_by(Train.fileName)%>%summarise(
+  meanAUC=mean(AUC)
+)
 
+write.table(MeanAUC_GCMs_RF,"Results/AllGCMs_SpatialBlockCV_RF_AUCs.txt", sep="\t")
 
-folds=CheqBrd.trial.blocks$folds
+############## NOW WITH GAM, K=10
+Train.fileNames = list.files(path="processed_data/TrainData/",pattern=".csv")
+Train.fileNames
 
-for(k in seq_len(length(folds))){
-  trainSet <- unlist(folds[[k]][1]) # training set indices
-  testSet <- unlist(folds[[k]][2]) # testing set indices
-  sample_sub=EWM.train.data_ACCESS.WtrTemp.Reduced[trainSet, ]
-  fm <- paste('s(', names(sample_sub[ -1 ]), ',k=10)', sep = "", collapse = ' + ')
+AUC_all=NULL
+
+for(Train.fileName in Train.fileNames) {
+  full.df = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
+  sub.df=full.df[,c(1,5,11,12)]
+  
+  folds=CheqBrd.trial.blocks$folds
+
+  for(k in seq_len(length(folds))){
+    trainSet <- unlist(folds[[k]][1]) # training set indices
+    testSet <- unlist(folds[[k]][2]) # testing set indices
+    sample_sub=sub.df[trainSet, ]
+    fm <- paste('s(', names(sample_sub[ -1 ]), ',k=10)', sep = "", collapse = ' + ')
+    fm <- as.formula(paste('EWMSTATUS_corrRelFrq ~', fm))
+    GAM_k10 = gam(fm,data=sample_sub, method="REML", family = "binomial")
+    full.df$GAMpreds[testSet] <- predict(GAM_k10, sub.df[testSet, ], type = "response") # predict the test set
+    
+       AUC=auc(roc(full.df$EWMSTATUS_corrRelFrq,full.df$GAMpreds))
+       AUC_all = rbind(AUC_all, data.frame(Train.fileName, k, AUC))
+  }
+}
+
+AUC_all$Train.fileName=sub('EWM.train.data_', '',AUC_all$Train.fileName)
+AUC_all
+AUC_all$Train.fileName=sub('.WtrTemp.csv', '',AUC_all$Train.fileName)
+AUC_all
+
+MeanAUC_GCMs_GAM.k10=AUC_all%>%group_by(Train.fileName)%>%summarise(
+  meanAUC=mean(AUC)
+)
+
+write.table(MeanAUC_GCMs_GAM.k10,"Results/AllGCMs_SpatialBlockCV_GAM.k10_AUCs.txt", sep="\t")
+
+############## NOW WITH GAM, K=3
+Train.fileNames = list.files(path="processed_data/TrainData/",pattern=".csv")
+Train.fileNames
+
+AUC_all=NULL
+
+for(Train.fileName in Train.fileNames) {
+  full.df = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
+  sub.df=full.df[,c(1,5,11,12)]
+  
+  folds=CheqBrd.trial.blocks$folds
+  
+  for(k in seq_len(length(folds))){
+    trainSet <- unlist(folds[[k]][1]) # training set indices
+    testSet <- unlist(folds[[k]][2]) # testing set indices
+    sample_sub=sub.df[trainSet, ]
+    fm <- paste('s(', names(sample_sub[ -1 ]), ',k=3)', sep = "", collapse = ' + ')
+    fm <- as.formula(paste('EWMSTATUS_corrRelFrq ~', fm))
+    GAM_k3 = gam(fm,data=sample_sub, method="REML", family = "binomial")
+    full.df$GAMpreds[testSet] <- predict(GAM_k3, sub.df[testSet, ], type = "response") # predict the test set
+    
+    AUC=auc(roc(full.df$EWMSTATUS_corrRelFrq,full.df$GAMpreds))
+    AUC_all = rbind(AUC_all, data.frame(Train.fileName, k, AUC))
+  }
+}
+
+AUC_all$Train.fileName=sub('EWM.train.data_', '',AUC_all$Train.fileName)
+AUC_all
+AUC_all$Train.fileName=sub('.WtrTemp.csv', '',AUC_all$Train.fileName)
+AUC_all
+
+MeanAUC_GCMs_GAM.k3=AUC_all%>%group_by(Train.fileName)%>%summarise(
+  meanAUC=mean(AUC)
+)
+MeanAUC_GCMs_GAM.k3
+write.table(MeanAUC_GCMs_GAM.k10,"Results/AllGCMs_SpatialBlockCV_GAM.k10_AUCs.txt", sep="\t")
+
+############################################## INDEPENDENT VALIDATION, 90% AND HIGHER GDD VALUES BLOCKED
+
+Train.fileNames = list.files(path="processed_data/TrainData/",pattern=".csv")
+Train.fileNames
+
+AUC_all=NULL
+
+for(Train.fileName in Train.fileNames) {
+  full.df = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
+  sub.df=full.df[,c(1,5,11,12)]
+  q=quantile(sub.df[,4], probs=0.9)
+  test.df=sub.df%>%filter(.[[4]]>q)
+  train.df=sub.df%>%filter(.[[4]]<q)
+  
+rf = randomForest(as.factor(EWMSTATUS_corrRelFrq)~., train.df[,-1 ], ntree = 500, data=train.df, keep.forest=TRUE)
+test.df$preds=NULL
+test.df$preds=predict(rf, test.df[,-1], type = "prob")[,2]
+
+AUC=auc(roc(test.df$EWMSTATUS_corrRelFrq,test.df$preds))
+AUC_all = rbind(AUC_all, data.frame(Train.fileName, AUC)) 
+
+}
+  
+################## NOW WITH GAM, K=10
+
+Train.fileNames = list.files(path="processed_data/TrainData/",pattern=".csv")
+Train.fileNames
+
+AUC_all=NULL
+
+for(Train.fileName in Train.fileNames) {
+  full.df = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
+  sub.df=full.df[,c(1,5,11,12)]
+  q=quantile(sub.df[,4], probs=0.9)
+  test.df=sub.df%>%filter(.[[4]]>q)
+  train.df=sub.df%>%filter(.[[4]]<q)
+  
+  fm <- paste('s(', names(train.df[ -1 ]), ',k=10)', sep = "", collapse = ' + ')
   fm <- as.formula(paste('EWMSTATUS_corrRelFrq ~', fm))
-  GAM_k10 = gam(fm,data=sample_sub, method="REML", family = "binomial")
-
-  EWM.train.data_ACCESS.WtrTemp$GAMpreds[testSet] <- predict(GAM_k10, EWM.train.data_ACCESS.WtrTemp.Reduced[testSet, ], type = "response") # predict the test set
+  GAM_k10 = gam(fm,data=train.df, method="REML", family = "binomial")
+  test.df$GAMpreds=NULL
+  test.df$GAMpreds <- predict(GAM_k10, test.df[, -1], type = "response") # predict the test set
+  
+  AUC=auc(roc(test.df$EWMSTATUS_corrRelFrq,test.df$GAMpreds))
+  AUC_all = rbind(AUC_all, data.frame(Train.fileName, AUC)) 
+  
 }
+  
+################## NOW WITH GAM, K=3
 
-precrec_obj = evalmod(scores = EWM.train.data_ACCESS.WtrTemp$GAMpreds, labels = EWM.train.data_ACCESS.WtrTemp$EWMSTATUS_corrRelFrq)
-precrec_obj
+Train.fileNames = list.files(path="processed_data/TrainData/",pattern=".csv")
+Train.fileNames
+
+AUC_all=NULL
+
+for(Train.fileName in Train.fileNames) {
+  full.df = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
+  sub.df=full.df[,c(1,5,11,12)]
+  q=quantile(sub.df[,4], probs=0.9)
+  test.df=sub.df%>%filter(.[[4]]>q)
+  train.df=sub.df%>%filter(.[[4]]<q)
+  
+  fm <- paste('s(', names(train.df[ -1 ]), ',k=3)', sep = "", collapse = ' + ')
+  fm <- as.formula(paste('EWMSTATUS_corrRelFrq ~', fm))
+  GAM_k3 = gam(fm,data=train.df, method="REML", family = "binomial")
+  test.df$GAMpreds=NULL
+  test.df$GAMpreds <- predict(GAM_k3, test.df[, -1], type = "response") # predict the test set
+  
+  AUC=auc(roc(test.df$EWMSTATUS_corrRelFrq,test.df$GAMpreds))
+  AUC_all = rbind(AUC_all, data.frame(Train.fileName, AUC)) 
+  
+}
