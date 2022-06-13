@@ -3,7 +3,27 @@ library(tidyverse)
 library(reshape2)
 library(ggplot2)
 
+
 setwd("~/UMNpostdoc/ProjectEWM/RProjects/EWM_ClimateChange")
+
+###Extract EWM occurrence data
+
+EWM.alllakes.data=read_csv("raw_data/EWM.occ_abund.data.csv")
+EWM.alllakes.data%>%filter(EWMSTATUS!="U")
+
+EWM.alllakes.data%>%View()
+EWM.secchi=EWM.alllakes.data[,c(1:7,19,21)]%>%na.omit()
+EWM.secchi
+
+LakeConn.data=read_csv("raw_data/LakeConn.data.csv")
+RoadDensity.data=LakeConn.data%>%select(DOWLKNUM,roaddensity_density_mperha)%>%na.omit()
+
+RoadDensity.data
+
+EWM.alllakes.secchi.conn.data=left_join(EWM.secchi,RoadDensity.data, by="DOWLKNUM")%>%na.omit()
+EWM.surveyed.lakes.secchi.conn.data=EWM.alllakes.secchi.conn.data%>%filter(EWMSTATUS!="U")
+EWM.surveyed.lakes.secchi.conn.data
+write_csv(EWM.surveyed.lakes.secchi.conn.data,"processed_data/EWM.surveyed.lakes.secchi.conn.data.csv")
 
 ###1. Read all the different temperature projection datasets
 ACCESS.temp.metrics=read.csv("raw_data/ACCESS_thermal_metrics.tsv", sep="\t")
@@ -43,17 +63,23 @@ head(ACCESS.temp.GDD10c.DOWs)
 hist(ACCESS.temp.GDD10c.DOWs$year)
 
 ### the above final dataset has a lot of lake ids to work with; subset by  merging with EWM prsence/absence data
-EWMprsabs.data=read.csv("processed_data/EWM.infes_relfrq.selpreds.prsabs.csv")
-head(EWMprsabs.data)
-head(ACCESS.temp.GDD10c.DOWs)
+
+EWMprsabs.data=read_csv("processed_data/EWM.infes_relfrq.selpreds.prsabs.csv") ### the original data with 10 covariates, 
+EWMprsabs.data                                                                               ### and lake conn. was added later
+
+EWM.data=read_csv("processed_data/EWM.surveyed.lakes.secchi.conn.data.csv") ## the new version with only 3 key covariates, more lakes included
+EWM.data
 
 ### Filter the water temperature data to only include years between 1995 and 2015; the years of most EWM sampling
+ACCESS.temp.GDD10c.DOWs=read_csv("processed_data/ACCESS.temp.GDD10c.DOWs.csv")
 ACCESS.GDD10c.curr=ACCESS.temp.GDD10c.DOWs%>%filter(year>1994 & year<2016)%>% group_by(dowlknum)%>% summarise(
   avg.ann.gdd=mean(gdd_wtr_10c)
 )
 dim(ACCESS.GDD10c.curr)
 ACCESS.GDD10c.curr%>%View()
 
+
+MIROC5.temp.GDD10c.DOWs=read_csv("processed_data/MIROC5.temp.GDD10c.DOWs.csv")
 MIROC5.GDD10c.curr=MIROC5.temp.GDD10c.DOWs%>%filter(year>1994 & year<2016)%>% group_by(dowlknum)%>% 
   summarise(
     avg.ann.gdd=mean(gdd_wtr_10c)
@@ -61,18 +87,21 @@ MIROC5.GDD10c.curr=MIROC5.temp.GDD10c.DOWs%>%filter(year>1994 & year<2016)%>% gr
 dim(MIROC5.GDD10c.curr)
 MIROC5.GDD10c.curr%>%View()
 
+GFDL.temp.GDD10c.DOWs=read_csv("processed_data/GFDL.temp.GDD10c.DOWs.csv")
 GFDL.GDD10c.curr=GFDL.temp.GDD10c.DOWs%>%filter(year>1994 & year<2016)%>% group_by(dowlknum)%>% summarise(
   avg.ann.gdd=mean(gdd_wtr_10c)
 )
 dim(GFDL.GDD10c.curr)
 GFDL.GDD10c.curr%>%View()
 
+IPSL.temp.GDD10c.DOWs=read_csv("processed_data/IPSL.temp.GDD10c.DOWs.csv")
 IPSL.GDD10c.curr=IPSL.temp.GDD10c.DOWs%>%filter(year>1994 & year<2016)%>% group_by(dowlknum)%>% summarise(
   avg.ann.gdd=mean(gdd_wtr_10c)
 )
 dim(IPSL.GDD10c.curr)
 IPSL.GDD10c.curr%>%View()
 
+MRI.temp.GDD10c.DOWs=read_csv("processed_data/MRI.temp.GDD10c.DOWs.csv")
 MRI.GDD10c.curr=MRI.temp.GDD10c.DOWs%>%filter(year>1994 & year<2016)%>% group_by(dowlknum)%>% summarise(
   avg.ann.gdd=mean(gdd_wtr_10c)
 )
@@ -84,7 +113,7 @@ colnames(ACCESS.GDD10c.curr)[2]="ACCESS.avg.ann.gdd"
 colnames(ACCESS.GDD10c.curr)[1]="DOWLKNUM"
 ACCESS.GDD10c.curr
 
-EWMprsabs.data_updated =merge(EWMprsabs.data,ACCESS.GDD10c.curr, by="DOWLKNUM")
+EWMprsabs.data_updated =merge(EWM.data,ACCESS.GDD10c.curr, by="DOWLKNUM")
 head(EWMprsabs.data_updated)
 
 colnames(MIROC5.GDD10c.curr)[2]="MIROC5.avg.ann.gdd"
@@ -115,16 +144,12 @@ MRI.GDD10c.curr
 EWMprsabs.data_updated =merge(EWMprsabs.data_updated,MRI.GDD10c.curr, by="DOWLKNUM")
 head(EWMprsabs.data_updated)
 
-### Forgot to include lake connectivity data; road density & stream density
-LakeConn=read_csv("raw_data/LakeConn.data.csv")
-LakeConn
+write_csv(EWMprsabs.data_updated, "processed_data/EWM.prsabs95to15_AllGCMs_v2.csv") ## the second version with only three covariates- GDD, Secchi
+                                                                                    ## and roads
 
-EWMprsabs.data_final=left_join(EWMprsabs.data_updated,LakeConn, by="DOWLKNUM")
-EWMprsabs.data_final.nona=EWMprsabs.data_final%>%na.omit()
-dim(EWMprsabs.data_final.nona)
-head(EWMprsabs.data_final.nona)
 
-write_csv(EWMprsabs.data_final.nona, "processed_data/EWM.prsabs95to15_AllGCMs.csv")
+write_csv(EWMprsabs.data_final.nona, "processed_data/EWM.prsabs95to15_AllGCMs.csv") ## the first version with fewer lakes, 
+                                                                                    ## because it included other covariates
 
 ### A quick plot of all the lake GDD measures from 5 different GCMs
 plot(EWMprsabs.data_updated$LAT, EWMprsabs.data_updated$mean.gdd_wtr_10c, col="gray", pch=16, xlab="Latitiude", ylab="Ann. GDD@10c")

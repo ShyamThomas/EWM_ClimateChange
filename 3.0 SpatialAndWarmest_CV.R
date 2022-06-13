@@ -221,9 +221,9 @@ AUC_all=NULL
 for(Train.fileName in Train.fileNames) {
   full.df = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
   sub.df=full.df[,c(1,5,11,12)]
-  q=quantile(sub.df[,4], probs=0.9)
-  test.df=sub.df%>%filter(.[[4]]>q)
-  train.df=sub.df%>%filter(.[[4]]<q)
+  q=quantile(sub.df[,4], probs=0.9) ### set the threshold at 90th percentile
+  test.df=sub.df%>%filter(.[[4]]>q) ### test data containing lakes with upper 10th percent temperatures
+  train.df=sub.df%>%filter(.[[4]]<q) ### train data all but
   
 rf = randomForest(as.factor(EWMSTATUS_corrRelFrq)~., train.df[,-1 ], ntree = 500, data=train.df, keep.forest=TRUE)
 test.df$preds=NULL

@@ -44,7 +44,6 @@ EWM.train.data_MRI.WtrTemp=sdm.data[,-c(1,2,14:18)]
 EWM.train.data_MRI.WtrTemp
 write_csv(EWM.train.data_MRI.WtrTemp, "processed_data/TrainData/EWM.train.data_MRI.WtrTemp.csv")
 
-### Created a new folder 'TrainData' within folder 'Data' and  moved the above saved files there!
 ################### ITERATING RF MODELS ACROSS ALL THE TRAIN DATSETS
 ### Start by creating a list of all the saved files in the new folder
 Train.fileNames = list.files(path="processed_data/TrainData/",pattern=".csv")
@@ -68,7 +67,7 @@ for(Train.fileName in Train.fileNames) {
 load.Rdata("processed_data/TrainData/EWM.train.data_ACCESS.WtrTempGAM.Rdata", "ACCESS.GAM.model")
 load.Rdata("processed_data/TrainData/EWM.train.data_GFDL.WtrTempGAM.Rdata", "GFDL.GAM.model")
 load.Rdata("processed_data/TrainData/EWM.train.data_IPSL.WtrTempGAM.Rdata", "IPSL.GAM.model")
-load.Rdata("processed_data/TrainData/EWM.train.data_MIROC5.WtrTempGAM.Rdata", "MIROC5.GAM.model")
+load.Rdata("processed_data/TrainData/EWM.train.data_MIROC5.WtrTeNOmpGAM.Rdata", "MIROC5.GAM.model")
 load.Rdata("processed_data/TrainData/EWM.train.data_MRI.WtrTempGAM.Rdata", "MRI.GAM.model")
 
 ## setting k =3
@@ -86,6 +85,7 @@ load.Rdata("processed_data/TrainData/EWM.train.data_GFDL.WtrTempGAM_k3.Rdata", "
 load.Rdata("processed_data/TrainData/EWM.train.data_IPSL.WtrTempGAM_k3.Rdata", "IPSL.GAM_k3.model")
 load.Rdata("processed_data/TrainData/EWM.train.data_MIROC5.WtrTempGAM_k3.Rdata", "MIROC5.GAM_k3.model")
 load.Rdata("processed_data/TrainData/EWM.train.data_MRI.WtrTempGAM_k3.Rdata", "MRI.GAM_k3.model")
+
 plot(ACCESS.GAM_k3.model, select=3)
 plot(GFDL.GAM_k3.model, select=3)
 plot(IPSL.GAM_k3.model, select=3)
@@ -113,11 +113,11 @@ library(gridExtra)
 library(gratia)
 
 grid.arrange(
-draw(ACCESS.GAM_k3.model, select=3),draw(ACCESS.GAM_k6.model, select=3),draw(ACCESS.GAM.model, select=3),
-draw(GFDL.GAM_k3.model, select=3),draw(GFDL.GAM_k6.model, select=3),draw(GFDL.GAM.model, select=3),
-draw(IPSL.GAM_k3.model, select=3),draw(IPSL.GAM_k6.model, select=3),draw(IPSL.GAM.model, select=3),
-draw(MIROC5.GAM_k3.model, select=3),draw(MIROC5.GAM_k6.model, select=3),draw(MIROC5.GAM.model, select=3),
-draw(MRI.GAM_k3.model, select=3),draw(MRI.GAM_k6.model, select=3),draw(MRI.GAM.model, select=3),
+draw(ACCESS.GAM_k3.model, select=3),draw(ACCESS.GAM.model, select=3),
+draw(GFDL.GAM_k3.model, select=3),draw(GFDL.GAM.model, select=3),
+draw(IPSL.GAM_k3.model, select=3),draw(IPSL.GAM.model, select=3),
+draw(MIROC5.GAM_k3.model, select=3),draw(MIROC5.GAM.model, select=3),
+draw(MRI.GAM_k3.model, select=3),draw(MRI.GAM.model, select=3),
 nrow=5)
 
 ############################################################################################################################################
