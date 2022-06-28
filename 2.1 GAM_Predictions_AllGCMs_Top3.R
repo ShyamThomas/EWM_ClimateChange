@@ -19,9 +19,9 @@ new.data=list()
 ### Loop all test data files to make a new data file with just the three predictors
 for (TestData in TestDataFiles){
   Test = read.csv(paste("processed_data/TestData/ForecastData/",TestData, sep=""))
-  Test.preds=Test[,c(5,11,12)]
-  colnames(Test.preds)[3]=paste(str_sub(TestData, 19,-13),".avg.ann.gdd", sep="")
-  new.data[[TestData]]=Test.preds
+  #Test.preds=Test[,c(5,11,12)]
+  colnames(Test)[3]=paste(str_sub(TestData, 19,-13),".avg.ann.gdd", sep="")
+  new.data[[TestData]]=Test
 }
 
 fut.predictions=list()
@@ -45,8 +45,8 @@ new.data=list()
 
 for (TrainData in TrainDataFiles){
   Train = read.csv(paste("processed_data/TrainData/",TrainData, sep=""))
-  Train.preds=Train[,c(5,11,12)]
-  new.data[[TrainData]]=Train.preds
+  #Train.preds=Train[,c(5,11,12)]
+  new.data[[TrainData]]=Train
 }
 
 curr.predictions=list()
@@ -68,18 +68,21 @@ colnames(fut.preds.df)
 colnames(curr.preds.df)=ModelNames
 colnames(curr.preds.df)
 
-fut.preds.df$DOWLKNUM=Test$DOWLKNUM
+fut.preds.df$DOWLKNUM=EWM.GCMs.data$DOWLKNUM
 curr.preds.df$DOWLKNUM=EWM.GCMs.data$DOWLKNUM
 write_csv(fut.preds.df, "Results/GAM.k3_Fut.Predictions.csv")
 write_csv(curr.preds.df, "Results/GAM.k3_Curr.Predictions.csv")
 
-curr.preds.df$Period=rep("Current",468)
-fut.preds.df$Period=rep("Future",467)
+curr.preds.df$Period=rep("Current",578)
+fut.preds.df$Period=rep("Future",578)
 currANDfut_preds=bind_rows(curr.preds.df,fut.preds.df)
-currANDfut_preds.melt=melt(currANDfut_preds)
+currANDfut_preds_noDOW=currANDfut_preds[,-6]
+head(currANDfut_preds_noDOW)
+currANDfut_preds.melt=melt(currANDfut_preds_noDOW)
 head(currANDfut_preds.melt)
 
 InvasionRisk_Plot_GAM_k3=ggplot(currANDfut_preds.melt, aes(x=variable, y=value, fill=Period))+geom_boxplot()+ylab("Invasion Risk")+xlab("GCMs")
+InvasionRisk_Plot_GAM_k3
 ggsave("InvasionRisk_Plot_GAM.png", path="Figures/", device = "png",width = 6, height = 4.5 )
 
 ############################################################################################################################################
@@ -98,9 +101,9 @@ new.data=list()
 ### Loop all test data files to make a new data file with just the three predictors
 for (TestData in TestDataFiles){
   Test = read.csv(paste("processed_data/TestData/ForecastData/",TestData, sep=""))
-  Test.preds=Test[,c(5,11,12)]
+  #Test.preds=Test[,c(5,11,12)]
   colnames(Test.preds)[3]=paste(str_sub(TestData, 19,-13),".avg.ann.gdd", sep="")
-  new.data[[TestData]]=Test.preds
+  new.data[[TestData]]=Test
 }
 
 fut.predictions=list()
@@ -124,8 +127,8 @@ new.data=list()
 
 for (TrainData in TrainDataFiles){
   Train = read.csv(paste("processed_data/TrainData/",TrainData, sep=""))
-  Train.preds=Train[,c(5,11,12)]
-  new.data[[TrainData]]=Train.preds
+  #Train.preds=Train[,c(5,11,12)]
+  new.data[[TrainData]]=Train
 }
 
 curr.predictions=list()
@@ -147,17 +150,20 @@ colnames(fut.preds.df)
 colnames(curr.preds.df)=ModelNames
 colnames(curr.preds.df)
 
-fut.preds.df$DOWLKNUM=Test$DOWLKNUM
+fut.preds.df$DOWLKNUM=EWM.GCMs.data$DOWLKNUM
 curr.preds.df$DOWLKNUM=EWM.GCMs.data$DOWLKNUM
 write_csv(fut.preds.df, "Results/GAM.k10_Fut.Predictions.csv")
 write_csv(curr.preds.df, "Results/GAM.k10_Curr.Predictions.csv")
 
-curr.preds.df$Period=rep("Current",468)
-fut.preds.df$Period=rep("Future",467)
+curr.preds.df$Period=rep("Current",578)
+fut.preds.df$Period=rep("Future",578)
 currANDfut_preds_k10=bind_rows(curr.preds.df,fut.preds.df)
-currANDfut_preds.melt_k10=melt(currANDfut_preds_k10)
+currANDfut_preds_k10_noDOW=currANDfut_preds_k10[,-6]
+
+currANDfut_preds.melt_k10=melt(currANDfut_preds_k10_noDOW)
 head(currANDfut_preds.melt_k10)
 
 InvasionRisk_Plot_GAM_k10=ggplot(currANDfut_preds.melt_k10, aes(x=variable, y=value, fill=Period))+geom_boxplot()+
   ylab("Invasion Risk")+xlab("GCMs")
+InvasionRisk_Plot_GAM_k10
 ggsave("InvasionRisk_Plot_CompGAM.png", path="Figures/", device = "png",width = 6, height = 4.5 )

@@ -39,17 +39,20 @@ MRI.temp.GDD10c.DOWs=merge(MRI.temp.GDD10c,mn.nhd_ids, by="site_id")
 write_csv(MRI.temp.GDD10c.DOWs, "processed_data/MRI.temp.GDD10c.DOWs.csv")
 
 ### the above final dataset has a lot of lake ids to work with; subset by  merging with EWM prsence/absence data
-EWMprsabs.data=read.csv("processed_data/EWM.infes_relfrq.selpreds.prsabs.csv")
-head(EWMprsabs.data)
-head(ACCESS.temp.GDD10c.DOWs)
+### EWMprsabs.data=read.csv("processed_data/EWM.infes_relfrq.selpreds.prsabs.csv") ## previous EWM data version
+
+EWM.data=read_csv("processed_data/EWM.surveyed.lakes.secchi.conn.data.csv") ## the new version with only 3 key covariates, more lakes included
+EWM.data
 
 ### Filter the water temperature data to only include years between 2040 and 2060; the years of most EWM sampling
+ACCESS.temp.GDD10c.DOWs=read_csv("processed_data/ACCESS.temp.GDD10c.DOWs.csv")
 ACCESS.GDD10c.fut=ACCESS.temp.GDD10c.DOWs%>%filter(year>2039 & year<2061)%>% group_by(dowlknum)%>% summarise(
   avg.ann.gdd=mean(gdd_wtr_10c)
 )
 dim(ACCESS.GDD10c.fut)
 ACCESS.GDD10c.fut%>%View()
 
+MIROC5.temp.GDD10c.DOWs=read_csv("processed_data/MIROC5.temp.GDD10c.DOWs.csv")
 MIROC5.GDD10c.fut=MIROC5.temp.GDD10c.DOWs%>%filter(year>2039 & year<2061)%>% group_by(dowlknum)%>% 
   summarise(
     avg.ann.gdd=mean(gdd_wtr_10c)
@@ -57,18 +60,21 @@ MIROC5.GDD10c.fut=MIROC5.temp.GDD10c.DOWs%>%filter(year>2039 & year<2061)%>% gro
 dim(MIROC5.GDD10c.fut)
 MIROC5.GDD10c.fut%>%View()
 
+GFDL.temp.GDD10c.DOWs=read_csv("processed_data/GFDL.temp.GDD10c.DOWs.csv")
 GFDL.GDD10c.fut=GFDL.temp.GDD10c.DOWs%>%filter(year>2039 & year<2061)%>% group_by(dowlknum)%>% summarise(
   avg.ann.gdd=mean(gdd_wtr_10c)
 )
 dim(GFDL.GDD10c.fut)
 GFDL.GDD10c.fut%>%View()
 
+IPSL.temp.GDD10c.DOWs=read_csv("processed_data/IPSL.temp.GDD10c.DOWs.csv")
 IPSL.GDD10c.fut=IPSL.temp.GDD10c.DOWs%>%filter(year>2039 & year<2061)%>% group_by(dowlknum)%>% summarise(
   avg.ann.gdd=mean(gdd_wtr_10c)
 )
 dim(IPSL.GDD10c.fut)
 IPSL.GDD10c.fut%>%View()
 
+MRI.temp.GDD10c.DOWs=read_csv("processed_data/MRI.temp.GDD10c.DOWs.csv")
 MRI.GDD10c.fut=MRI.temp.GDD10c.DOWs%>%filter(year>2039 & year<2061)%>% group_by(dowlknum)%>% summarise(
   avg.ann.gdd=mean(gdd_wtr_10c)
 )
@@ -80,7 +86,7 @@ colnames(ACCESS.GDD10c.fut)[2]="ACCESS.avg.ann.gdd"
 colnames(ACCESS.GDD10c.fut)[1]="DOWLKNUM"
 ACCESS.GDD10c.fut
 
-EWMprsabs.data_updated =merge(EWMprsabs.data,ACCESS.GDD10c.fut, by="DOWLKNUM")
+EWMprsabs.data_updated =merge(EWM.data,ACCESS.GDD10c.fut, by="DOWLKNUM")
 head(EWMprsabs.data_updated)
 
 colnames(MIROC5.GDD10c.fut)[2]="MIROC5.avg.ann.gdd"
@@ -111,34 +117,36 @@ MRI.GDD10c.fut
 EWMprsabs.data_updated =merge(EWMprsabs.data_updated,MRI.GDD10c.fut, by="DOWLKNUM")
 head(EWMprsabs.data_updated)
 
-LakeConn=read_csv("raw_data/LakeConn.data.csv")
-LakeConn
+write_csv(EWMprsabs.data_updated,"processed_data/EWM.prsabs40to60_AllGCMs_v2.csv")
 
-EWMprsabs.data_final=left_join(EWMprsabs.data_updated,LakeConn, by="DOWLKNUM")
-EWMprsabs.data_final.nona=EWMprsabs.data_final%>%na.omit()
-dim(EWMprsabs.data_final.nona)
-head(EWMprsabs.data_final.nona)
+#LakeConn=read_csv("raw_data/LakeConn.data.csv")
+#LakeConn
 
-write_csv(EWMprsabs.data_final.nona, "processed_data/EWM.prsabs40to60_AllGCMs.csv")
+#EWMprsabs.data_final=left_join(EWMprsabs.data_updated,LakeConn, by="DOWLKNUM")
+#EWMprsabs.data_final.nona=EWMprsabs.data_final%>%na.omit()
+#dim(EWMprsabs.data_final.nona)
+#head(EWMprsabs.data_final.nona)
+#write_csv(EWMprsabs.data_final.nona, "processed_data/EWM.prsabs40to60_AllGCMs.csv")
 
 
 ############### MAKE A PLOT COMPARING PREDICTED WATER TEMPERATURE GDD
-EWM.futr.data=read_csv("processed_data/EWM.prsabs40to60_AllGCMs.csv")
+EWM.futr.data=read_csv("processed_data/EWM.prsabs40to60_AllGCMs_v2.csv")
 EWM.futr.data
-EWM.curr.data=read_csv("processed_data/EWM.prsabs95to15_AllGCMs.csv")
+EWM.curr.data=read_csv("processed_data/EWM.prsabs95to15_AllGCMs_v2.csv")
 EWM.curr.data
-EWM.currtemp.GCMs=EWM.curr.data[,c(1:5,19:23)]
-EWM.futrtemp.GCMs=EWM.futr.data[,c(1:5,17:21)]
+EWM.currtemp.GCMs=EWM.curr.data[,c(1:5,7,11:15)]
+EWM.currtemp.GCMs
+EWM.futrtemp.GCMs=EWM.futr.data[,c(1:5,7,11:15)]
+EWM.futrtemp.GCMs
 
-
-EWM.currtemp.GCMs=EWM.currtemp.GCMs%>%mutate(Period= rep("Current",468))
-EWM.futrtemp.GCMs=EWM.futrtemp.GCMs%>%mutate(Period= rep("Future",467))
+EWM.currtemp.GCMs=EWM.currtemp.GCMs%>%mutate(Period= rep("Current",578))
+EWM.futrtemp.GCMs=EWM.futrtemp.GCMs%>%mutate(Period= rep("Future",578))
 bind_rows(EWM.currtemp.GCMs, EWM.futrtemp.GCMs)
 EWM.CURR.FUTR.GCM_data=bind_rows(EWM.currtemp.GCMs, EWM.futrtemp.GCMs)
 EWM.CURR.FUTR.GCM_data
 
 
-EWM.CURR.FUTR.GCM_melt=melt(EWM.CURR.FUTR.GCM_data[,c(6:11)])
+EWM.CURR.FUTR.GCM_melt=melt(EWM.CURR.FUTR.GCM_data[,c(7:12)])
 
 EWM.CURR.FUTR.GCM_melt$GCMs=gsub('.{12}$','',EWM.CURR.FUTR.GCM_melt$variable)
 head(EWM.CURR.FUTR.GCM_melt)

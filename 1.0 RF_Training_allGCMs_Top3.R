@@ -2,9 +2,12 @@ library(sf)
 library(randomForest)
 library(tidyverse)
 library(corrplot)
+library(pdp)
 
 setwd("~/UMNpostdoc/ProjectEWM/RProjects/EWM_ClimateChange")
 
+########################################################################################################################################
+### This is the earlier version with fewer lakes
 EWM.GCMs.data=read_csv("processed_data/EWM.prsabs95to15_AllGCMs.csv")
 EWM.GCMs.data
 EWM.GCMs.data%>%View()
@@ -18,29 +21,31 @@ colnames(sdm.data )=c("Long", "Lat","EWM","LakeDepth", "LakeSize", "pH", "Secchi
                       " Phosphorus", "Chlorophyll", "CDOM", "StreamConnectivity", "RoadDensity", 
                       "WtrTemp_Avg.Ann.GDD","ACCESS.avg.ann.gdd","MIROC5.avg.ann.gdd","IPSL.avg.ann.gdd",
                       "GFDL.avg.ann.gdd", "MRI.avg.ann.gdd")
-sdm.data 
+###########################################################################################################################################
 
+EWM.GCMs.data=read_csv("processed_data/EWM.prsabs95to15_AllGCMs_v2.csv")
+EWM.GCMs.data
 
-EWM.train.data_WtrTemp=sdm.data[,-c(1,2,15:19)]
-EWM.train.data_WtrTemp
+#EWM.train.data_WtrTemp=EWM.GCMs.data[,-c(1:6,9,12:15)]
+#EWM.train.data_WtrTemp
 
-EWM.train.data_ACCESS.WtrTemp=sdm.data[,-c(1,2,14,16:19)]
+EWM.train.data_ACCESS.WtrTemp=EWM.GCMs.data[,-c(1:6,9,12:15)]
 EWM.train.data_ACCESS.WtrTemp
 write_csv(EWM.train.data_ACCESS.WtrTemp, "processed_data/TrainData/EWM.train.data_ACCESS.WtrTemp.csv")
 
-EWM.train.data_MIROC5.WtrTemp=sdm.data[,-c(1,2,14,15,17:19)]
+EWM.train.data_MIROC5.WtrTemp=EWM.GCMs.data[,-c(1:6,9,11,13:15)]
 EWM.train.data_MIROC5.WtrTemp
 write_csv(EWM.train.data_MIROC5.WtrTemp, "processed_data/TrainData/EWM.train.data_MIROC5.WtrTemp.csv")
 
-EWM.train.data_IPSL.WtrTemp=sdm.data[,-c(1,2,14:16,18,19)]
+EWM.train.data_IPSL.WtrTemp=EWM.GCMs.data[,-c(1:6,9,11:12,14:15)]
 EWM.train.data_IPSL.WtrTemp
 write_csv(EWM.train.data_IPSL.WtrTemp, "processed_data/TrainData/EWM.train.data_IPSL.WtrTemp.csv")
 
-EWM.train.data_GFDL.WtrTemp=sdm.data[,-c(1,2,14:17,19)]
+EWM.train.data_GFDL.WtrTemp=EWM.GCMs.data[,-c(1:6,9,11:13,15)]
 EWM.train.data_GFDL.WtrTemp
 write_csv(EWM.train.data_GFDL.WtrTemp, "processed_data/TrainData/EWM.train.data_GFDL.WtrTemp.csv")
 
-EWM.train.data_MRI.WtrTemp=sdm.data[,-c(1,2,14:18)]
+EWM.train.data_MRI.WtrTemp=EWM.GCMs.data[,-c(1:6,9,11:14)]
 EWM.train.data_MRI.WtrTemp
 write_csv(EWM.train.data_MRI.WtrTemp, "processed_data/TrainData/EWM.train.data_MRI.WtrTemp.csv")
 
@@ -58,7 +63,7 @@ results=NULL
 
 for(Train.fileName in Train.fileNames) {
 sample = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
-rf = randomForest(sample[,c(3:5,7:12)], sample$EWM,importance=TRUE, ntree=5000, type="regression")
+rf = randomForest(sample[,c(2:4)], sample$EWMSTATUS,importance=TRUE, ntree=5000, type="regression")
 #save(rf, file=paste("Data/TrainData/", sub('....$','',Train.fileName), ".Rdata", sep=""))
 
 #meanMSE = mean(rf$mse)
@@ -79,17 +84,17 @@ results_top3=NULL
 
 for(Train.fileName in Train.fileNames) {
   sample = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
-  rf = randomForest(sample[,c(5,11,12)], sample$EWMSTATUS_corrRelFrq,importance=TRUE, ntree=5000, type="regression")
-  save(rf, file=paste("processed_data/TrainData/", sub('....$','',Train.fileName), "Top3_.Rdata", sep=""))
+  rf = randomForest(sample[,(2:4)], sample$EWMSTATUS,importance=TRUE, ntree=5000, type="regression")
+  save(rf, file=paste("processed_data/TrainData/", sub('....$','',Train.fileName), "Top3.Rdata", sep=""))
   
   meanMSE = mean(rf$mse)
   results_top3 = rbind(results_top3, data.frame(Train.fileName, meanMSE))
   write.table(results_top3,"Results/RF_MSE_Top3.txt",sep = "\t")
   
-  Top3Preds.Names=colnames(sample)[c(5,11,12)]
+  Top3Preds.Names=colnames(sample)[c(2:4)]
   
   for (Pred.Name in Top3Preds.Names){
-    partial_plot=autoplot(partial(rf,pred.var = Pred.Name, ice=TRUE, rug=TRUE, train = sample, prob = TRUE),xlab=Pred.Name, ylab="Invasion risk", alpha=0.1)
+    partial_plot=autoplot(partial(rf, pred.var = Pred.Name, ice=TRUE, rug=TRUE, train = sample, prob = TRUE),xlab=Pred.Name, ylab="Invasion risk", alpha=0.1)
     ggsave(filename=paste(sub('....$','',Train.fileName),"_",Pred.Name,"_IcePlot.png", sep=""), partial_plot, path="Figures/",units="in", width=9, height=6, dpi=900)
     }
 }
@@ -109,10 +114,10 @@ for(Train.fileName in Train.fileNames) {
 
   for(i in 1:5){test.data=full.df[full.df$folds==i,]
                 train.data= full.df[full.df$folds !=i,]
-                train.rf = randomForest(train.data[,c(5,11,12)], train.data$EWMSTATUS_corrRelFrq,importance=TRUE, ntree=5000, 
+                train.rf = randomForest(train.data[,c(2:4)], train.data$EWMSTATUS,importance=TRUE, ntree=5000, 
                                         type="regression")
                 preds.test=predict(train.rf, newdata=test.data)
-                AUC=auc(roc(test.data$EWMSTATUS_corrRelFrq,preds.test))
+                AUC=auc(roc(test.data$EWMSTATUS,preds.test))
 
                 AUC_all = rbind(AUC_all, data.frame(Train.fileName, i, AUC))
   }

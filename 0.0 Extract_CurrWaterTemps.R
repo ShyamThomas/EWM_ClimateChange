@@ -9,7 +9,7 @@ setwd("~/UMNpostdoc/ProjectEWM/RProjects/EWM_ClimateChange")
 ###Extract EWM occurrence data
 
 EWM.alllakes.data=read_csv("raw_data/EWM.occ_abund.data.csv")
-EWM.alllakes.data%>%filter(EWMSTATUS!="U")
+EWM.alllakes.data%>%filter(EWMSTATUS!="U")%>%View()
 
 EWM.alllakes.data%>%View()
 EWM.secchi=EWM.alllakes.data[,c(1:7,19,21)]%>%na.omit()
@@ -20,7 +20,7 @@ RoadDensity.data=LakeConn.data%>%select(DOWLKNUM,roaddensity_density_mperha)%>%n
 
 RoadDensity.data
 
-EWM.alllakes.secchi.conn.data=left_join(EWM.secchi,RoadDensity.data, by="DOWLKNUM")%>%na.omit()
+EWM.alllakes.secchi.conn.data=left_join(EWM.secchi,RoadDensity.data, by="DOWLKNUM")%>%na.omit() ## ALL POTENTIAL LAKES THAT CAN BE PREDICTED
 EWM.surveyed.lakes.secchi.conn.data=EWM.alllakes.secchi.conn.data%>%filter(EWMSTATUS!="U")
 EWM.surveyed.lakes.secchi.conn.data
 write_csv(EWM.surveyed.lakes.secchi.conn.data,"processed_data/EWM.surveyed.lakes.secchi.conn.data.csv")
@@ -64,8 +64,7 @@ hist(ACCESS.temp.GDD10c.DOWs$year)
 
 ### the above final dataset has a lot of lake ids to work with; subset by  merging with EWM prsence/absence data
 
-EWMprsabs.data=read_csv("processed_data/EWM.infes_relfrq.selpreds.prsabs.csv") ### the original data with 10 covariates, 
-EWMprsabs.data                                                                               ### and lake conn. was added later
+##EWMprsabs.data=read_csv("processed_data/EWM.infes_relfrq.selpreds.prsabs.csv") ### the original data with 10 covariates,                                                                                ### and lake conn. was added later
 
 EWM.data=read_csv("processed_data/EWM.surveyed.lakes.secchi.conn.data.csv") ## the new version with only 3 key covariates, more lakes included
 EWM.data
