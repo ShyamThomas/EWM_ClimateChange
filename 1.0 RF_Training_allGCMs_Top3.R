@@ -22,7 +22,7 @@ colnames(sdm.data )=c("Long", "Lat","EWM","LakeDepth", "LakeSize", "pH", "Secchi
                       "WtrTemp_Avg.Ann.GDD","ACCESS.avg.ann.gdd","MIROC5.avg.ann.gdd","IPSL.avg.ann.gdd",
                       "GFDL.avg.ann.gdd", "MRI.avg.ann.gdd")
 ###########################################################################################################################################
-
+### New version with more lakes
 EWM.GCMs.data=read_csv("processed_data/EWM.prsabs95to15_AllGCMs_v2.csv")
 EWM.GCMs.data
 

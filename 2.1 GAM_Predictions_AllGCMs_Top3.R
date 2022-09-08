@@ -68,8 +68,8 @@ colnames(fut.preds.df)
 colnames(curr.preds.df)=ModelNames
 colnames(curr.preds.df)
 
-fut.preds.df$DOWLKNUM=EWM.GCMs.data$DOWLKNUM
-curr.preds.df$DOWLKNUM=EWM.GCMs.data$DOWLKNUM
+fut.preds.df$DOWLKNUM=EWM.futr.data$DOWLKNUM
+curr.preds.df$DOWLKNUM=EWM.futr.data$DOWLKNUM
 write_csv(fut.preds.df, "Results/GAM.k3_Fut.Predictions.csv")
 write_csv(curr.preds.df, "Results/GAM.k3_Curr.Predictions.csv")
 
@@ -83,7 +83,7 @@ head(currANDfut_preds.melt)
 
 InvasionRisk_Plot_GAM_k3=ggplot(currANDfut_preds.melt, aes(x=variable, y=value, fill=Period))+geom_boxplot()+ylab("Invasion Risk")+xlab("GCMs")
 InvasionRisk_Plot_GAM_k3
-ggsave("InvasionRisk_Plot_GAM.png", path="Figures/", device = "png",width = 6, height = 4.5 )
+ggsave("InvasionRisk_Plot_GAMk3.png", path="Figures/", device = "png",width = 6, height = 4.5 )
 
 ############################################################################################################################################
 ############################################################################################################################################
@@ -150,8 +150,8 @@ colnames(fut.preds.df)
 colnames(curr.preds.df)=ModelNames
 colnames(curr.preds.df)
 
-fut.preds.df$DOWLKNUM=EWM.GCMs.data$DOWLKNUM
-curr.preds.df$DOWLKNUM=EWM.GCMs.data$DOWLKNUM
+fut.preds.df$DOWLKNUM=EWM.futr.data$DOWLKNUM
+curr.preds.df$DOWLKNUM=EWM.futr.data$DOWLKNUM
 write_csv(fut.preds.df, "Results/GAM.k10_Fut.Predictions.csv")
 write_csv(curr.preds.df, "Results/GAM.k10_Curr.Predictions.csv")
 
@@ -166,4 +166,4 @@ head(currANDfut_preds.melt_k10)
 InvasionRisk_Plot_GAM_k10=ggplot(currANDfut_preds.melt_k10, aes(x=variable, y=value, fill=Period))+geom_boxplot()+
   ylab("Invasion Risk")+xlab("GCMs")
 InvasionRisk_Plot_GAM_k10
-ggsave("InvasionRisk_Plot_CompGAM.png", path="Figures/", device = "png",width = 6, height = 4.5 )
+ggsave("InvasionRisk_Plot_GAMk10.png", path="Figures/", device = "png",width = 6, height = 4.5 )

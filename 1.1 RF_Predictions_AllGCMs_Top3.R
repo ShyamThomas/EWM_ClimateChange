@@ -84,6 +84,12 @@ head(curr.preds.df)
 write_csv(curr.preds.df, "Results/Curr.Predictions.csv")
 
 ############################################################################################################################################
+curr.preds.df=read_csv("Results/Curr.Predictions.csv")
+curr.preds.df
+fut.preds.df=read_csv("Results/Futr.Predictions.csv")
+fut.preds.df
+fut.preds.df$DOWLKNUM=EWM.futr.data$DOWLKNUM
+curr.preds.df$DOWLKNUM=EWM.futr.data$DOWLKNUM
 ModelNames=c("ACCESS","GFDL","IPSL","MIROC5","MRI")
 ModelNames
 colnames(fut.preds.df)=ModelNames
@@ -98,6 +104,7 @@ currANDfut_preds.melt=melt(currANDfut_preds)
 head(currANDfut_preds.melt)
 
 InvasionRisk_Plot=ggplot(currANDfut_preds.melt, aes(x=variable, y=value, fill=Period))+geom_boxplot()+ylab("Invasion Risk")+xlab("GCMs")
-ggsave("InvasionRisk_Plot.png", path="Figures/", device = "png",width = 6, height = 4.5 )
+InvasionRisk_Plot
+ggsave("InvasionRisk_RF_Plot.png", path="Figures/", device = "png",width = 6, height = 4.5 )
 
 

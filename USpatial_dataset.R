@@ -35,13 +35,17 @@ EWM.CurrFutr.Preds.Doms=EWM.CurrFutr.Preds%>%mutate(ACCESS.domain=case_when(ACCE
                             GFDL.domain=case_when(GFDL.Futr < max(GFDL.Curr) ~ 'Analog', GFDL.Futr > max(GFDL.Curr) ~ 'NonAnalog'),
                             MRI.domain=case_when(MRI.Futr < max(MRI.Curr) ~ 'Analog', MRI.Futr > max(MRI.Curr) ~ 'NonAnalog')
 )
-                            
+        
+EWM.CurrFutr.Preds.Doms                    
 write_csv(EWM.CurrFutr.Preds.Doms, "processed_data/EWM.CurrFutr.Preds.Doms.csv")
 
 ### 3. Predictions of EWM occurrence: two sets for each 5 GCM temp estimates and 3 SDM modeling algorithms
 ####### 30 columns: SDM_GCM_PERIOD
 ########### Start with GAM k=3
-head(currANDfut_preds) ## from 2.1 GAM_Predictions output
+fut.preds.df=read_csv("Results/GAM.k3_Fut.Predictions.csv") ## from 2.1 GAM_Predictions output
+curr.preds.df=read_csv("Results/GAM.k3_Curr.Predictions.csv")
+currANDfut_preds=bind_rows(curr.preds.df,fut.preds.df)
+head(currANDfut_preds) 
 dim(currANDfut_preds)
 ## Split into 2 seperate datasets of 578 rows each
 curr.preds.GAM_k3=currANDfut_preds[1:578,]
@@ -51,14 +55,17 @@ colnames(futr.preds.GAM_k3)[1:6]=c("ACCESS.GAMk3.FutrPred" ,  "GFDL.GAMk3.FutrPr
 colnames(curr.preds.GAM_k3)[1:6]=c("ACCESS.GAMk3.CurrPred" ,  "GFDL.GAMk3.CurrPred"   ,  "IPSL.GAMk3.CurrPred"  ,   "MIROC5.GAMk3.CurrPred"  , "MRI.GAMk3.CurrPred"   ,   "DOWLKNUM")
 
 ########### Next with GAM k=10
-head(currANDfut_preds_k10) #from 2.1 GAM_Predictions output
+fut.preds.df=read_csv("Results/GAM.k10_Fut.Predictions.csv") #from 2.1 GAM_Predictions output
+curr.preds.df=read_csv("Results/GAM.k10_Curr.Predictions.csv")
+currANDfut_preds_k10=bind_rows(curr.preds.df,fut.preds.df)
+currANDfut_preds_k10
 dim(currANDfut_preds_k10)
 
 curr.preds.GAM_k10=currANDfut_preds_k10[1:578,]
 futr.preds.GAM_k10=currANDfut_preds_k10[579:1156,]
 
 colnames(futr.preds.GAM_k10)[1:6]=c("ACCESS.GAMk10.FutrPred" ,  "GFDL.GAMk10.FutrPred"   ,  "IPSL.GAMk10.FutrPred"  ,   "MIROC5.GAMk10.FutrPred"  , "MRI.GAMk10.FutrPred"   ,   "DOWLKNUM")
-colnames(curr.preds.GAM_k10)[1:6]=c("ACCESS.GAMk10.CurrPred" ,  "GFDL.GAMk10.CurrPred"   ,  "IPSL.GAMk10.CurrPred"  ,   "MIROC5.GAMk10.CurrPred"  , "MRI.GAMk3.CurrPred"   ,   "DOWLKNUM")
+colnames(curr.preds.GAM_k10)[1:6]=c("ACCESS.GAMk10.CurrPred" ,  "GFDL.GAMk10.CurrPred"   ,  "IPSL.GAMk10.CurrPred"  ,   "MIROC5.GAMk10.CurrPred"  , "MRI.GAMk10.CurrPred"   ,   "DOWLKNUM")
 
 ########### Finally with Random Forest model predictions
 RF_curr.preds=read_csv("Results/Curr.Predictions.csv")
@@ -81,8 +88,14 @@ Final_MergedData=left_join(EWM.CurrFutr.Preds.Doms,curr.preds.GAM_k3[,1:6], by="
                              left_join(., RF_curr.preds[,-6],by="DOWLKNUM")%>%
                               left_join(., RF_futr.preds[,-6],by="DOWLKNUM")
 
-write_csv(Final_MeregedData, "Results/Final_MergedData.csv")
+Final_MergedData%>%View()
+write_csv(Final_MergedData, "Results/AllEWM_SDM_results.csv")
 
+Final_MergedData=read_csv("Results/AllEWM_SDM_results.csv")
 
+Final_MergedData_V2=left_join(Final_MeregedData,Curr.Brm.Preds_EWMGeoIndex[,c(5:7)], by="DOWLKNUM")%>%
+                        left_join(.,Fut.Brm.Preds_EWMGeoIndex[,c(5:7)], by="DOWLKNUM")
+Final_MergedData_V2
+write_csv(Final_MergedData_V2, "Results/Final_MergedData.csv")
 
 ################# TOTAL COLUMSN ESTIMATED~5+18+30=53

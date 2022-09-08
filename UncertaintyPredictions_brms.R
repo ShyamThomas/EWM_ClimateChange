@@ -6,7 +6,7 @@ library(brms)
 Data_Combined = list.files(path="processed_data/TrainData/",pattern=".csv", full.names = TRUE) %>%
   lapply(read_csv)%>%
   bind_rows(id=NULL)%>%
-  mutate(Id=rep(1:468,5))
+  mutate(Id=rep(1:578,5))
 
 Data_Combined%>%View()
 
@@ -20,16 +20,17 @@ maxGDD=max(c_across(ACCESS.avg.ann.gdd:MRI.avg.ann.gdd), na.rm=TRUE)
 
 Access.TrainData=read_csv("processed_data/TrainData/EWM.train.data_ACCESS.WtrTemp.csv")
 colnames(Access.TrainData)
-Avg.CurrTemp.data=bind_cols(Access.TrainData[,-12],TempAvgs[,2:4])
+Avg.CurrTemp.data=bind_cols(Access.TrainData[,-4],TempAvgs[,2:4])
 Avg.CurrTemp.data
 
 ### We need only 3 predictors
-Curr.Brm.TrainData=Avg.CurrTemp.data[,c(1,5,11,12)]
+Curr.Brm.TrainData=Avg.CurrTemp.data[,c(1:4)]
 Curr.Brm.TrainData
 
 colnames(Curr.Brm.TrainData)[2:4]=c("avgSecchi", "avgRoads", "avgGDD")
+Curr.Brm.TrainData
 
-ewm.brm.trial <- brm(bf(EWMSTATUS_corrRelFrq ~ s(avgGDD, k=10)+s(avgSecchi, k=10)+s(avgRoads, k=10)),
+ewm.brm.trial <- brm(bf(EWMSTATUS ~ s(avgGDD, k=10)+s(avgSecchi, k=10)+s(avgRoads, k=10)),
 data = Curr.Brm.TrainData, family = bernoulli(), cores = 4, seed = 17,
 iter = 4000, warmup = 1000, thin = 10, refresh = 0,
 control = list(adapt_delta = 0.99))
@@ -37,27 +38,49 @@ control = list(adapt_delta = 0.99))
 summary(ewm.brm.trial)
 pp_check(ewm.brm.trial)
 plot(ewm.brm.trial)
+
 post_brms.trial=posterior_samples(ewm.brm.trial)
 
 ### Lets make posterior predictions from sample draws
-ewm.epreds=posterior_epred(ewm.brm.trial)
-str(ewm.epreds)
-head(ewm.epreds)
+curr.ewm.epreds=posterior_epred(ewm.brm.trial, draw_ids = c(1001:1200))
+str(curr.ewm.epreds)
+head(curr.ewm.epreds)
+
+library(matrixStats)
+
+avg.curr.preds=colMeans(curr.ewm.epreds)
+sd.curr.preds=colSds(curr.ewm.epreds)
+var.curr.preds=colVars(curr.ewm.epreds)
+plot(Curr.Brm.TrainData$avgGDD, avg.curr.preds)
+plot(Curr.Brm.TrainData$avgGDD, var.curr.preds)
+
+Curr.Brm.Preds=Curr.Brm.TrainData%>%mutate(mean.curr.preds=avg.curr.preds,var.curr.preds=var.curr.preds, DOWLKNUM=EWM.GCMs.data$DOWLKNUM)
+Curr.Brm.Preds
+EWM_GeoCoord.Index=EWM.GCMs.data[,1:5]
+EWM_GeoCoord.Index
+Curr.Brm.Preds_EWMGeoIndex=left_join(Curr.Brm.Preds, EWM_GeoCoord.Index, by="DOWLKNUM")
+Curr.Brm.Preds_EWMGeoIndex
 
 
 FutData_Combined = list.files(path="processed_data/TestData/ForecastData",pattern=".csv", full.names = TRUE) %>%
 lapply(read_csv)%>%
-bind_rows(id=NULL)
+bind_rows(id=NULL)%>%
+mutate(Id=rep(1:578,5))
 
+FutTempAvgs=FutData_Combined%>%group_by(Id)%>%summarise(
+  avgGDD=mean(c_across(ACCESS.avg.ann.gdd:MRI.avg.ann.gdd), na.rm=TRUE),
+  minGDD=min(c_across(ACCESS.avg.ann.gdd:MRI.avg.ann.gdd), na.rm=TRUE),
+  maxGDD=max(c_across(ACCESS.avg.ann.gdd:MRI.avg.ann.gdd), na.rm=TRUE)
+)%>%ungroup()
+FutTempAvgs
 
-Fut.Brm.TestData=FutData_Combined%>%group_by(DOWLKNUM)%>%summarise(
-avgGDD=mean(avg.ann.gdd),
-avgSecchi=mean(avg_secchi),
-avgRoads=mean(roaddensity_density_mperha)
-)
-
+Fut.Brm.TestData=bind_cols(Access.TrainData[,-4],FutTempAvgs[,2])
+colnames(Fut.Brm.TestData)[2:4]=c("avgSecchi", "avgRoads", "avgGDD")
 Fut.Brm.TestData
-ewm.epreds.forecast=posterior_epred(ewm.brm.trial, newdata =Fut.Brm.TestData[,-1], draw_ids =  c(1001:1200))
+
+fut.ewm.epreds=posterior_epred(ewm.brm.trial, newdata =Fut.Brm.TestData[,-1], draw_ids =  c(1001:1200))
+str(fut.ewm.epreds)
+head(fut.ewm.epreds)
 
 avg.fut.preds=colMeans(fut.ewm.epreds)
 sd.fut.preds=colSds(fut.ewm.epreds)
@@ -65,5 +88,24 @@ var.fut.preds=colVars(fut.ewm.epreds)
 plot(Fut.Brm.TestData$avgGDD, avg.fut.preds, abline(v=2200))
 plot(Fut.Brm.TestData$avgGDD, var.fut.preds, abline(v=2200))
 
-ggplot(Minn.sf)+geom_sf()+geom_sf(data=Fut.Brm.Preds_EWMGeoIndex ,aes(col=var.fut.preds), alpha=0.5, size=2)
+Fut.Brm.Preds=Fut.Brm.TestData%>%mutate(mean.fut.preds=avg.fut.preds,var.fut.preds=var.fut.preds, DOWLKNUM=EWM.GCMs.data$DOWLKNUM)
+Fut.Brm.Preds
+EWM_GeoCoord.Index=EWM.GCMs.data[,1:5]
+Fut.Brm.Preds_EWMGeoIndex=left_join(Fut.Brm.Preds, EWM_GeoCoord.Index, by="DOWLKNUM")
+Fut.Brm.Preds_EWMGeoIndex
+
+
+#### Finally map the data
+Curr.Brm.Preds_EWMGeoIndex.sf=st_as_sf(Curr.Brm.Preds_EWMGeoIndex,coords=c("LON", "LAT"),crs=32615)
+Curr.Brm.Preds_EWMGeoIndex.sf
+
+Fut.Brm.Preds_EWMGeoIndex.sf=st_as_sf(Fut.Brm.Preds_EWMGeoIndex,coords=c("LON", "LAT"),crs=32615)
+Fut.Brm.Preds_EWMGeoIndex.sf
+
+Minn.sf=read_sf(dsn="/Users/thom7552/UMNpostdoc/ProjectEWM/MinnEWM/MinnGISlayers", layer="Minn.map")
+Minn.sf=st_transform(Minn.sf, crs=32615)
+Minn.sf
+
+ggplot(Minn.sf)+geom_sf()+geom_sf(data=Fut.Brm.Preds_EWMGeoIndex.sf, aes(col=mean.fut.preds))+scale_color_viridis_c(name="Estimate")+theme_minimal()+
+theme(text=element_text(size=16))+theme(legend.position = c(0.8, 0.4))
 
