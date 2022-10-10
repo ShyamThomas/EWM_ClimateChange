@@ -127,7 +127,7 @@ AUC_all=NULL
 
 for(Train.fileName in Train.fileNames) {
   full.df = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
-  sub.df=full.df[,c(1,5,11,12)]
+  sub.df=full.df[,c(1:4)]
   folds = rep_len(1:5,nrow(sub.df))
   sample.folds=sample(folds,nrow(sample))
   sub.df$folds=sample.folds
@@ -137,11 +137,11 @@ for(Train.fileName in Train.fileNames) {
   for(i in 1:5){test.data=sub.df[sub.df$folds==i,]
       train.data= sub.df[sub.df$folds !=i,]
       fm <- paste('s(', names(sub.df[ -c(1,5) ]), ',k=3)', sep = "", collapse = ' + ')   ### FOR k=3 GAMs & then k=10
-      fm <- as.formula(paste('EWMSTATUS_corrRelFrq ~', fm))
+      fm <- as.formula(paste('EWMSTATUS ~', fm))
       gam_k3 = gam(fm,data=train.data, method="REML", family = "binomial")
       preds.test=predict(gam_k3, newdata=test.data, type="response")
   
-  AUC=auc(roc(test.data$EWMSTATUS_corrRelFrq,preds.test))
+  AUC=auc(roc(test.data$EWMSTATUS,preds.test))
   AUC_all = rbind(AUC_all, data.frame(Train.fileName, i, AUC))
   }
 }
@@ -164,7 +164,7 @@ AUC_all=NULL
 
 for(Train.fileName in Train.fileNames) {
   full.df = read.csv(paste("processed_data/TrainData/",Train.fileName, sep=""))
-  sub.df=full.df[,c(1,5,11,12)]
+  sub.df=full.df[,c(1:4)]
   folds = rep_len(1:5,nrow(sub.df))
   sample.folds=sample(folds,nrow(sample))
   sub.df$folds=sample.folds
@@ -173,12 +173,12 @@ for(Train.fileName in Train.fileNames) {
   
   for(i in 1:5){test.data=sub.df[sub.df$folds==i,]
   train.data= sub.df[sub.df$folds !=i,]
-  fm <- paste('s(', names(sub.df[ -c(1,5) ]), ',k=10)', sep = "", collapse = ' + ')   ### FOR GAMs k=10
-  fm <- as.formula(paste('EWMSTATUS_corrRelFrq ~', fm))
+  fm <- paste('s(', names(sub.df[ -c(1,5) ]),',k=10)', sep = "", collapse = ' + ')   ### FOR GAMs k=10
+  fm <- as.formula(paste('EWMSTATUS ~', fm))
   gam_k10 = gam(fm,data=train.data, method="REML", family = "binomial")
   preds.test=predict(gam_k10, newdata=test.data, type="response")
   
-  AUC=auc(roc(test.data$EWMSTATUS_corrRelFrq,preds.test))
+  AUC=auc(roc(test.data$EWMSTATUS,preds.test))
   AUC_all = rbind(AUC_all, data.frame(Train.fileName, i, AUC))
   }
 }

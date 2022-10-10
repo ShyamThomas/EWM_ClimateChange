@@ -134,7 +134,7 @@ AUC_all
 MeanAUC_GCMs_RF=AUC_all%>%group_by(Train.fileName)%>%summarise(
  meanAUC=mean(AUC)
  )
-
+MeanAUC_GCMs_RF
 write.table(MeanAUC_GCMs_RF,"Results/AllGCMs_5foldCV_RF_AUCs.txt", sep="\t")
 
 
