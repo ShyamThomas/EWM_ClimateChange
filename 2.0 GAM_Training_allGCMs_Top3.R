@@ -90,7 +90,6 @@ plot(GFDL.GAM_k3.model, select=3)
 plot(IPSL.GAM_k3.model, select=3)
 plot(MIROC5.GAM_k3.model, select=3)
 
-par(mfrow=c(2,3))
 
 ## setting k = 6
 

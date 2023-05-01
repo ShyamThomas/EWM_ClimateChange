@@ -3,29 +3,29 @@ library(tidyverse)
 library(reshape2)
 library(ggplot2)
 
-
 setwd("~/UMNpostdoc/ProjectEWM/RProjects/EWM_ClimateChange")
+################################################################################################################
+##### The scripts below extract water temperature data for all lakes that were surveyed for EWM occurrence #####
+################################################################################################################
 
-###Extract EWM occurrence data
-
+##### Step 1a. Read the EWM database and remove the unsurveyed lakes
 EWM.alllakes.data=read_csv("raw_data/EWM.occ_abund.data.csv")
 EWM.alllakes.data%>%filter(EWMSTATUS!="U")%>%View()
-
+##### Step 1b. Extract the secchi data for the selected lakes
 EWM.alllakes.data%>%View()
 EWM.secchi=EWM.alllakes.data[,c(1:7,19,21)]%>%na.omit()
 EWM.secchi
 
+##### Step 2a. Read the lake connectivity database and extract the road density data
 LakeConn.data=read_csv("raw_data/LakeConn.data.csv")
 RoadDensity.data=LakeConn.data%>%select(DOWLKNUM,roaddensity_density_mperha)%>%na.omit()
-
-RoadDensity.data
-
+##### Step 2b. Merge lake connectivity database and secchi data
 EWM.alllakes.secchi.conn.data=left_join(EWM.secchi,RoadDensity.data, by="DOWLKNUM")%>%na.omit() ## ALL POTENTIAL LAKES THAT CAN BE PREDICTED
 EWM.surveyed.lakes.secchi.conn.data=EWM.alllakes.secchi.conn.data%>%filter(EWMSTATUS!="U")
 EWM.surveyed.lakes.secchi.conn.data
 write_csv(EWM.surveyed.lakes.secchi.conn.data,"processed_data/EWM.surveyed.lakes.secchi.conn.data.csv")
 
-###1. Read all the different temperature projection datasets
+##### Step3. Read all the different predicted temperature datasets & select mean surface water temperatures
 ACCESS.temp.metrics=read.csv("raw_data/ACCESS_thermal_metrics.tsv", sep="\t")
 MIROC5.temp.metrics=read.csv("raw_data/MIROC5_thermal_metrics.tsv", sep="\t")
 GFDL.temp.metrics=read.csv("raw_data/GFDL_thermal_metrics.tsv", sep="\t")
@@ -38,12 +38,13 @@ GFDL.temp.GDD10c=GFDL.temp.metrics[,c(1:2,15)]
 IPSL.temp.GDD10c=IPSL.temp.metrics[,c(1:2,15)]
 MRI.temp.GDD10c=MRI.temp.metrics[,c(1:2,15)]
 
-head(ACCESS.temp.GDD10c)
-head(MIROC5.temp.GDD10c)
-head(GFDL.temp.GDD10c)
-head(IPSL.temp.GDD10c)
-head(MRI.temp.GDD10c)
+#head(ACCESS.temp.GDD10c)
+#head(MIROC5.temp.GDD10c)
+#head(GFDL.temp.GDD10c)
+#head(IPSL.temp.GDD10c)
+#head(MRI.temp.GDD10c)
 
+##### Step3.Get the crosswalk between NHID and MNDOWs
 mn.nhd_ids=read_csv("raw_data/MN_nhd2dowlknum.csv")
 head(mn.nhd_ids)
 dim(mn.nhd_ids) 
